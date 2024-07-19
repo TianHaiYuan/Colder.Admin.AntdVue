@@ -23,6 +23,12 @@
     <Message Text="Copying reference files to $(PublishDir)" Importance="High" />
     <Copy SourceFiles="@(ReferenceFiles)" DestinationFolder="$(PublishDir)" Condition="Exists('%(RootDir)%(Directory)%(Filename)%(Extension)')" />
   </Target>
+  <ItemGroup>
+    <Compile Remove="wwwroot\Upload\86beabed698342bbaa485ea5a821fafd\**" />
+    <Content Remove="wwwroot\Upload\86beabed698342bbaa485ea5a821fafd\**" />
+    <EmbeddedResource Remove="wwwroot\Upload\86beabed698342bbaa485ea5a821fafd\**" />
+    <None Remove="wwwroot\Upload\86beabed698342bbaa485ea5a821fafd\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Colder.Logging.Serilog" Version="1.2.17" />

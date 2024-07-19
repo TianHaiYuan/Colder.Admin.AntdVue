@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using NSwag.Annotations;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Coldairarrow.Api.Controllers.Base_Manage
 {
@@ -20,32 +22,38 @@ namespace Coldairarrow.Api.Controllers.Base_Manage
 
         [HttpPost]
         //[AllowAnonymous]
-        public IActionResult UploadFileByForm(IFormFile formFile)
+        public async Task<object> UploadFileByForm(IFormFile formFile)
         {
-            var file = formFile;
-            if (file == null)
-                return JsonContent(new { status = "error" }.ToJson());
-
-            string path = $"/Upload/{Guid.NewGuid().ToString("N")}/{file.FileName}";
-            string physicPath = GetAbsolutePath($"~{path}");
-            string dir = Path.GetDirectoryName(physicPath);
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-            using (FileStream fs = new FileStream(physicPath, FileMode.Create))
+            var files = Request.Form.Files;
+            if (files == null || files.Count == 0)
             {
-                file.CopyTo(fs);
+                return Error("No files were selected for upload.");
+            }
+            List<object> resp = new List<object>();
+            foreach (var file in files)
+            {
+                string path = $"/Upload/{Guid.NewGuid().ToString("N")}/{file.FileName}";
+                string physicPath = GetAbsolutePath($"~{path}");
+                string dir = Path.GetDirectoryName(physicPath);
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+                using (FileStream fs = new FileStream(physicPath, FileMode.Create))
+                {
+                    await file.CopyToAsync(fs);
+                }
+
+                string url = $"{_configuration["WebRootUrl"]}{path}";
+
+                var res = new
+                {
+                    name = file.FileName,
+                    status = "done",
+                    url
+                };
+                resp.Add(res);
             }
 
-            string url = $"{_configuration["WebRootUrl"]}{path}";
-            var res = new
-            {
-                name = file.FileName,
-                status = "done",
-                thumbUrl = url,
-                url = url
-            };
-
-            return JsonContent(res.ToJson());
+            return Success(resp);
         }
     }
 }
