@@ -12,13 +12,11 @@ namespace Coldairarrow.Business.Base_Manage
 {
     public class HomeBusiness : BaseBusiness<Base_User>, IHomeBusiness, ITransientDependency
     {
-        readonly IOperator _operator;
         readonly IMapper _mapper;
         private readonly IBase_UserCache _base_UserCache;
-        public HomeBusiness(IDbAccessor db, IOperator @operator, IMapper mapper, IBase_UserCache base_UserCache)
+        public HomeBusiness(IDbAccessor db, IMapper mapper, IBase_UserCache base_UserCache)
             : base(db)
         {
-            _operator = @operator;
             _mapper = mapper;
             _base_UserCache = base_UserCache;
         }

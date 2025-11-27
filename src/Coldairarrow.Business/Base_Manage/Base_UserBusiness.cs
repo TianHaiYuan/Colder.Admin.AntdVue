@@ -17,18 +17,15 @@ namespace Coldairarrow.Business.Base_Manage
 {
     public class Base_UserBusiness : BaseBusiness<Base_User>, IBase_UserBusiness, ITransientDependency
     {
-        readonly IOperator _operator;
         readonly IMapper _mapper;
         public Base_UserBusiness(
             IDbAccessor db,
             IBase_UserCache userCache,
-            IOperator @operator,
             IMapper mapper
             )
             : base(db)
         {
             _userCache = userCache;
-            _operator = @operator;
             _mapper = mapper;
         }
         IBase_UserCache _userCache { get; }
@@ -152,8 +149,6 @@ namespace Coldairarrow.Business.Base_Manage
             roleIds = roleIds ?? new List<string>();
             var userRoleList = roleIds.Select(x => new Base_UserRole
             {
-                Id = IdHelper.GetId(),
-                CreateTime = DateTime.Now,
                 UserId = userId,
                 RoleId = x
             }).ToList();

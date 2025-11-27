@@ -54,8 +54,6 @@ namespace Coldairarrow.Api.Controllers.Base_Manage
                 input.Password = input.newPwd.ToMD5String();
             if (input.Id.IsNullOrEmpty())
             {
-                InitEntity(input);
-
                 await _userBus.AddDataAsync(input);
             }
             else

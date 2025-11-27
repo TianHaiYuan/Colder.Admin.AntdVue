@@ -99,9 +99,7 @@ namespace Coldairarrow.Business.Base_Manage
             var roleActions = (actions ?? new List<string>())
                 .Select(x => new Base_RoleAction
                 {
-                    Id = IdHelper.GetId(),
                     ActionId = x,
-                    CreateTime = DateTime.Now,
                     RoleId = roleId
                 }).ToList();
             await Db.DeleteAsync<Base_RoleAction>(x => x.RoleId == roleId);

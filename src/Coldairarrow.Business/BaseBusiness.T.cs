@@ -1,6 +1,9 @@
-﻿using Coldairarrow.Util;
+﻿using Coldairarrow.Entity;
+using Coldairarrow.IBusiness;
+using Coldairarrow.Util;
 using EFCore.Sharding;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -26,6 +29,8 @@ namespace Coldairarrow.Business
         public BaseBusiness(IDbAccessor db)
         {
             Db = db;
+            // 从服务提供者获取 IOperator（可能为 null）
+            _operator = GlobalServiceProvider.ServiceProvider?.GetService<IOperator>();
         }
 
         #endregion
@@ -34,6 +39,47 @@ namespace Coldairarrow.Business
 
         protected virtual string _valueField { get; } = "Id";
         protected virtual string _textField { get => throw new Exception("请在子类重写"); }
+
+        /// <summary>
+        /// 当前操作者
+        /// </summary>
+        protected readonly IOperator _operator;
+
+        /// <summary>
+        /// 初始化实体的创建审计字段
+        /// </summary>
+        protected virtual void InitCreateAudit(object entity)
+        {
+            if (entity == null) return;
+
+            if (entity is BaseEntity baseEntity)
+            {
+                if (string.IsNullOrEmpty(baseEntity.Id))
+                    baseEntity.Id = IdHelper.GetId();
+                if (baseEntity.CreateTime == default)
+                    baseEntity.CreateTime = DateTime.Now;
+                if (string.IsNullOrEmpty(baseEntity.CreatorId))
+                    baseEntity.CreatorId = _operator?.UserId;
+                if (string.IsNullOrEmpty(baseEntity.CreatorName))
+                    baseEntity.CreatorName = _operator?.Property?.RealName;
+                baseEntity.Deleted = false;
+            }
+        }
+
+        /// <summary>
+        /// 初始化实体的修改审计字段
+        /// </summary>
+        protected virtual void InitUpdateAudit(object entity)
+        {
+            if (entity == null) return;
+
+            if (entity is BaseEntity baseEntity)
+            {
+                baseEntity.ModifyTime = DateTime.Now;
+                baseEntity.ModifierId = _operator?.UserId;
+                baseEntity.ModifierName = _operator?.Property?.RealName;
+            }
+        }
 
         #endregion
 
@@ -69,6 +115,7 @@ namespace Coldairarrow.Business
         /// <param name="entity">实体对象</param>
         public int Insert(T entity)
         {
+            InitCreateAudit(entity);
             return Db.Insert(entity);
         }
 
@@ -78,6 +125,7 @@ namespace Coldairarrow.Business
         /// <param name="entity">实体对象</param>
         public async Task<int> InsertAsync(T entity)
         {
+            InitCreateAudit(entity);
             return await Db.InsertAsync(entity);
         }
 
@@ -87,6 +135,7 @@ namespace Coldairarrow.Business
         /// <param name="entities">实体对象集合</param>
         public int Insert(List<T> entities)
         {
+            entities?.ForEach(InitCreateAudit);
             return Db.Insert(entities);
         }
 
@@ -96,6 +145,7 @@ namespace Coldairarrow.Business
         /// <param name="entities">实体对象集合</param>
         public async Task<int> InsertAsync(List<T> entities)
         {
+            entities?.ForEach(InitCreateAudit);
             return await Db.InsertAsync(entities);
         }
 
@@ -105,6 +155,7 @@ namespace Coldairarrow.Business
         /// <param name="entities"></param>
         public void BulkInsert(List<T> entities)
         {
+            entities?.ForEach(InitCreateAudit);
             Db.BulkInsert(entities);
         }
 
@@ -256,6 +307,7 @@ namespace Coldairarrow.Business
         /// <param name="entity">实体对象</param>
         public int Update(T entity)
         {
+            InitUpdateAudit(entity);
             return Db.Update(entity);
         }
 
@@ -265,6 +317,7 @@ namespace Coldairarrow.Business
         /// <param name="entity">实体对象</param>
         public async Task<int> UpdateAsync(T entity)
         {
+            InitUpdateAudit(entity);
             return await Db.UpdateAsync(entity);
         }
 
@@ -274,6 +327,7 @@ namespace Coldairarrow.Business
         /// <param name="entities">数据列表</param>
         public int Update(List<T> entities)
         {
+            entities?.ForEach(InitUpdateAudit);
             return Db.Update(entities);
         }
 
@@ -283,6 +337,7 @@ namespace Coldairarrow.Business
         /// <param name="entities">数据列表</param>
         public async Task<int> UpdateAsync(List<T> entities)
         {
+            entities?.ForEach(InitUpdateAudit);
             return await Db.UpdateAsync(entities);
         }
 

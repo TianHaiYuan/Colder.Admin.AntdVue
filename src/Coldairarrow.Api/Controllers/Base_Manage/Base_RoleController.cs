@@ -49,8 +49,6 @@ namespace Coldairarrow.Api.Controllers.Base_Manage
         {
             if (input.Id.IsNullOrEmpty())
             {
-                InitEntity(input);
-
                 await _roleBus.AddDataAsync(input);
             }
             else

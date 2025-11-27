@@ -23,9 +23,11 @@ namespace Coldairarrow.Api
                     {
                         config.SetEntityAssemblies(GlobalAssemblies.AllAssemblies);
 
-                        var dbOptions = hostContext.Configuration.GetSection("Database:BaseDb").Get<DatabaseOptions>();
+                        var baseDbOptions = hostContext.Configuration.GetSection("Database:BaseDb").Get<DatabaseOptions>();
+                        config.UseDatabase(baseDbOptions.ConnectionString, baseDbOptions.DatabaseType);
 
-                        config.UseDatabase(dbOptions.ConnectionString, dbOptions.DatabaseType);
+                        var orderDbOptions = hostContext.Configuration.GetSection("Database:OrderDb").Get<DatabaseOptions>();
+                        config.UseDatabase(orderDbOptions.ConnectionString, baseDbOptions.DatabaseType);
                     });
                 })
                 .ConfigureWebHostDefaults(webBuilder =>

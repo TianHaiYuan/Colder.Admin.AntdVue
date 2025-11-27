@@ -107,15 +107,12 @@ namespace Coldairarrow.Business.Base_Manage
         {
             permissionList.ForEach(aData =>
             {
-                aData.Id = IdHelper.GetId();
-                aData.CreateTime = DateTime.Now;
-                aData.CreatorId = null;
                 aData.ParentId = parentId;
                 aData.NeedAction = true;
             });
             //删除原来
             await DeleteAsync(x => x.ParentId == parentId && (int)x.Type == 2);
-            //新增
+            //新增（InsertAsync 会自动初始化审计字段）
             await InsertAsync(permissionList);
 
             //权限值必须唯一

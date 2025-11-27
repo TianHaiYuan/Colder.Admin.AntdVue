@@ -23,7 +23,7 @@ namespace Coldairarrow.Business.Base_Manage
             if (!search.logType.IsNullOrEmpty())
                 whereExp = whereExp.And(x => x.LogType == search.logType);
             if (!search.opUserName.IsNullOrEmpty())
-                whereExp = whereExp.And(x => x.CreatorRealName.Contains(search.opUserName));
+                whereExp = whereExp.And(x => x.CreatorName.Contains(search.opUserName));
             if (!search.startTime.IsNullOrEmpty())
                 whereExp = whereExp.And(x => x.CreateTime >= search.startTime);
             if (!search.endTime.IsNullOrEmpty())

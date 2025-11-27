@@ -58,6 +58,9 @@ namespace Coldairarrow.Api
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            // 设置全局服务提供者
+            GlobalServiceProvider.SetServiceProvider(app.ApplicationServices);
+
             //跨域
             app.UseCors(x =>
                 {

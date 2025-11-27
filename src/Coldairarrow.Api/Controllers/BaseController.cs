@@ -15,19 +15,6 @@ namespace Coldairarrow.Api
     [FormatResponse]
     public class BaseController : ControllerBase
     {
-        protected void InitEntity(object obj)
-        {
-            var op = HttpContext.RequestServices.GetService<IOperator>();
-            if (obj.ContainsProperty("Id"))
-                obj.SetPropertyValue("Id", IdHelper.GetId());
-            if (obj.ContainsProperty("CreateTime"))
-                obj.SetPropertyValue("CreateTime", DateTime.Now);
-            if (obj.ContainsProperty("CreatorId"))
-                obj.SetPropertyValue("CreatorId", op?.UserId);
-            if (obj.ContainsProperty("CreatorRealName"))
-                obj.SetPropertyValue("CreatorRealName", op?.Property?.RealName);
-        }
-
         protected string GetAbsolutePath(string virtualPath)
         {
             string path = virtualPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);

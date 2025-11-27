@@ -80,7 +80,7 @@ namespace Coldairarrow.Api
                 Id = IdHelper.GetId(),
                 CreateTime = DateTime.Now,
                 CreatorId = UserId,
-                CreatorRealName = Property.RealName,
+                CreatorName = Property.RealName,
                 LogContent = msg,
                 LogType = userLogType.ToString()
             };

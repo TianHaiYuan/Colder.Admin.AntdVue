@@ -19,7 +19,7 @@ namespace Coldairarrow.Business.Base_Manage
         }
 
         private static readonly List<string> ignoreProperties =
-            new List<string> { "Id", "CreateTime", "CreatorId", "CreatorRealName", "Deleted" };
+            new List<string> { "Id", "CreateTime", "CreatorId", "CreatorName", "ModifyTime", "ModifierId", "ModifierName", "Deleted", "TenantId" };
 
         #region 外部接口
 
