@@ -40,23 +40,23 @@ namespace Coldairarrow.Util
                 .ToList();
         }
 
-        protected override async Task InterceptAsync(IInvocation invocation, Func<IInvocation, Task> proceed)
+        protected override async Task InterceptAsync(IInvocation invocation, IInvocationProceedInfo proceedInfo, Func<IInvocation, IInvocationProceedInfo, Task> proceed)
         {
             Init(invocation);
 
             await Befor();
-            await proceed(invocation);
+            await proceed(invocation, proceedInfo);
             await After();
         }
 
-        protected override async Task<TResult> InterceptAsync<TResult>(IInvocation invocation, Func<IInvocation, Task<TResult>> proceed)
+        protected override async Task<TResult> InterceptAsync<TResult>(IInvocation invocation, IInvocationProceedInfo proceedInfo, Func<IInvocation, IInvocationProceedInfo, Task<TResult>> proceed)
         {
             Init(invocation);
 
             TResult result;
 
             await Befor();
-            result = await proceed(invocation);
+            result = await proceed(invocation, proceedInfo);
             await After();
 
             return result;

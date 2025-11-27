@@ -41,7 +41,6 @@ namespace Coldairarrow.Api
             //swagger
             services.AddOpenApiDocument(settings =>
             {
-                settings.AllowReferencesWithProperties = true;
                 settings.AddSecurity("身份认证Token", Enumerable.Empty<string>(), new OpenApiSecurityScheme()
                 {
                     Scheme = "bearer",
@@ -89,7 +88,7 @@ namespace Coldairarrow.Api
                     endpoints.MapControllers().RequireAuthorization();
                 })
                 .UseOpenApi()//添加swagger生成api文档（默认路由文档 /swagger/v1/swagger.json）
-                .UseSwaggerUi3()//添加Swagger UI到请求管道中(默认路由: /swagger).
+                .UseSwaggerUi()//添加Swagger UI到请求管道中(默认路由: /swagger).
                 ;
         }
     }

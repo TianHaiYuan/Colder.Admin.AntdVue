@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 
 namespace Coldairarrow.Util
@@ -9,6 +10,7 @@ namespace Coldairarrow.Util
     /// <summary>
     /// 图片操作帮助类
     /// </summary>
+    [SupportedOSPlatform("windows")]
     public class ImgHelper
     {
         /// <summary>
