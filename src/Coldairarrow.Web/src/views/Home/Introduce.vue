@@ -1,18 +1,18 @@
 <template>
   <a-card :bordered="false">
     <div>
-      <p>本框架为.NET Core3.0+Ant Design Vue版</p>
+      <p>本框架为.NET 8+Ant Design Vue 4.x版</p>
       <p>本框架旨在极大的提高开发效率</p>
       <p>
         使用技术栈：<br />
-        后端：采用.NET Core平台，ASP.NET Core3.0，C#语言（使用反射等高级技术），Entity
+        后端：采用.NET Core平台，ASP.NET Core 8.0，C#语言（使用反射等高级技术），Entity
         FrameworkCore（数据库ORM框架）。<br />
         使用数据仓储模式，抽象化数据库操作(CRUD等)、支持事务处理以及分布式事务处理（跨库）<br />
         支持数据库读写分离、分库分表及事务(仅支持单表操作,不支持多表)
         全面采用Autofac作为IOC容器,面向接口编程,全面解耦<br />
         集成多种工具类库以及操作拓展<br />
         数据库：支持SqlServer,PostgreSQL,MySQL,Oracle（框架使用简单工厂，工厂方法，抽象工厂，可轻松更换数据库）,Redis作为分布式缓存<br />
-        前端：Vue2.x全家桶+Ant Design Vue，其中集成常用组件，力求方便项目开发。
+        前端：Vue 3.x全家桶+Ant Design Vue 4.x，其中集成常用组件，力求方便项目开发。
         <br />
         <br />
         具体技术实施：<br />
@@ -37,7 +37,7 @@
         个人博客:<a href="https://www.cnblogs.com/coldairarrow/" target="_blank"
           >https://www.cnblogs.com/coldairarrow/</a
         ><br />
-        .NET Core3.0 下载:<a href="https://dotnet.microsoft.com/download" target="_blank"
+        .NET 8 下载:<a href="https://dotnet.microsoft.com/download" target="_blank"
           >https://dotnet.microsoft.com/download</a
         ><br />
         Vue官网:<a href="https://cn.vuejs.org/" target="_blank">https://cn.vuejs.org/</a><br />
@@ -51,3 +51,9 @@
     </div>
   </a-card>
 </template>
+
+<script>
+export default {
+  name: 'IntroduceView'
+}
+</script>

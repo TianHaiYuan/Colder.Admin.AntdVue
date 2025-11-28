@@ -1,4 +1,5 @@
 ﻿using Coldairarrow.Entity.Base_Manage;
+using Coldairarrow.IBusiness;
 using Coldairarrow.Util;
 using EFCore.Sharding;
 using Microsoft.Extensions.Hosting;
@@ -11,8 +12,8 @@ namespace Coldairarrow.Business.Base_Manage
 {
     public class BuildCodeBusiness : BaseBusiness<Base_DbLink>, IBuildCodeBusiness, ITransientDependency
     {
-        public BuildCodeBusiness(IDbAccessor db, IHostEnvironment evn)
-            : base(db)
+        public BuildCodeBusiness(IDbAccessor db, IHostEnvironment evn, IOperator @operator = null)
+            : base(db, @operator)
         {
             var projectPath = evn.ContentRootPath;
             _solutionPath = Directory.GetParent(projectPath).ToString();

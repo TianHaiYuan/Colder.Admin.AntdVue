@@ -1,20 +1,27 @@
-import router from '@/router'
-import { Axios } from '@/utils/plugin/axios-plugin'
-import { BasicLayout, PageView } from '@/layouts'
-import ProcessHelper from '@/utils/helper/ProcessHelper'
-import defaultSettings from '@/config/defaultSettings'
-var uuid = require('node-uuid')
+import router from '@/router/index.js'
+import { Axios } from '@/utils/plugin/axios-plugin.js'
+import { BasicLayout, PageView } from '@/layouts/index.js'
+import ProcessHelper from '@/utils/helper/ProcessHelper.js'
+import defaultSettings from '@/config/defaultSettings.js'
+import { v4 as uuidv4 } from 'uuid'
+import { ref } from 'vue'
 
-let inited = false
-let addRouter = []
+// 使用响应式变量存储路由
+const addRouter = ref([])
 
 export const getAddRouter = () => {
+  return addRouter.value
+}
+
+export const getAddRouterRef = () => {
   return addRouter
 }
 
 // 前端未找到页面路由（固定不用改）
 const notFoundRouter = {
-  path: '*', redirect: '/404', hidden: true
+  path: '/:pathMatch(.*)*',
+  redirect: '/404',
+  hidden: true
 }
 
 // 开发模式额外路由
@@ -54,119 +61,108 @@ const devRouter = [
     ]
   }
 ]
-export const initRouter = (to, from, next) => {
-  return new Promise((res, rej) => {
-    if (inited) {
-      res()
-    } else {
-      generatorDynamicRouter().then(dynamicRouter => {
-        router.addRoutes(dynamicRouter)
-        addRouter = dynamicRouter
-        inited = true
-        next({ ...to, replace: true })
-      })
-    }
+
+export const initRouter = async (to, from, routerInstance) => {
+  const dynamicRouter = await generatorDynamicRouter()
+  // Vue Router 4 使用 addRoute 逐个添加
+  dynamicRouter.forEach(route => {
+    routerInstance.addRoute(route)
   })
+  addRouter.value = dynamicRouter
 }
 
 /**
  * 获取路由菜单信息
- *
- * 1. 调用 getRouterByUser() 访问后端接口获得路由结构数组
- *    @see https://github.com/sendya/ant-design-pro-vue/blob/feature/dynamic-menu/public/dynamic-menu.json
- * 2. 调用
- * @returns {Promise<any>}
  */
-const generatorDynamicRouter = () => {
-  return new Promise((resolve, reject) => {
-    // ajax
-    getRouterByUser().then(res => {
-      // console.log('菜单:', res)
-      let allRouters = []
+const generatorDynamicRouter = async () => {
+  const res = await getRouterByUser()
+  let allRouters = []
 
-      //首页根路由
-      let rootRouter = {
-        // 路由地址 动态拼接生成如 /dashboard/workplace
-        path: '/',
-        redirect: defaultSettings.desktopPath,
-        // 路由名称，建议唯一
-        name: uuid.v4(),
-        // 该路由对应页面的 组件
-        component: BasicLayout,
-        // meta: 页面标题, 菜单图标, 页面权限(供指令权限用，可去掉)
-        meta: { title: '首页' },
-        children: []
-      }
-      allRouters.push(rootRouter)
+  // 首页根路由
+  let rootRouter = {
+    path: '/',
+    redirect: defaultSettings.desktopPath,
+    name: uuidv4(),
+    component: BasicLayout,
+    meta: { title: '首页' },
+    children: []
+  }
+  allRouters.push(rootRouter)
 
-      if (!ProcessHelper.isProduction()) {
-        res.push(...devRouter)
-      }
+  if (!ProcessHelper.isProduction()) {
+    res.push(...devRouter)
+  }
 
-      rootRouter.children = generator(res)
-      allRouters.push(notFoundRouter)
+  rootRouter.children = generator(res)
+  allRouters.push(notFoundRouter)
 
-      resolve(allRouters)
-    }).catch(err => {
-      reject(err)
-    })
-  })
+  return allRouters
 }
 
 /**
  * 获取后端路由信息的 axios API
- * @returns {Promise}
  */
-const getRouterByUser = () => {
-  // return Axios.post('/Base_Manage/Base_Action/GetMenuTreeList')
-  return new Promise((resolve, reject) => {
-    Axios.post('/Base_Manage/Home/GetOperatorMenuList', {}).then(resJson => {
-      if (resJson.Success) {
-        resolve(resJson.Data)
-      }
-    })
-  })
+const getRouterByUser = async () => {
+  try {
+    const resJson = await Axios.post('/Base_Manage/Home/GetOperatorMenuList', {})
+    if (resJson.Success) {
+      return resJson.Data
+    }
+    return []
+  } catch (error) {
+    console.error('GetOperatorMenuList error:', error)
+    return []
+  }
 }
+
+// 动态导入视图组件的映射
+const viewModules = import.meta.glob('@/views/**/*.vue')
 
 /**
  * 格式化 后端 结构信息并递归生成层级路由表
- *
- * @param routerMap
- * @param parent
- * @returns {*}
  */
-const generator = (routerMap, parent) => {
+const generator = (routerMap) => {
   return routerMap.map(item => {
     let hasChildren = item.children && item.children.length > 0
-    let component = {}
+    let component = null
+
     if (hasChildren) {
       component = PageView
     } else if (item.path) {
-      component = () => import(`@/views${item.path}`)
+      // Vite 动态导入 - 尝试多种路径格式
+      const possiblePaths = [
+        `/src/views${item.path}.vue`,
+        `../views${item.path}.vue`,
+        `@/views${item.path}.vue`
+      ]
+
+      let foundPath = null
+      for (const p of possiblePaths) {
+        if (viewModules[p]) {
+          foundPath = p
+          break
+        }
+      }
+
+      component = foundPath ? viewModules[foundPath] : (() => import('@/views/exception/404.vue'))
     }
+
     let currentRouter = {
       path: '',
-      // 路由名称，建议唯一
-      name: uuid.v4(),
-      // 该路由对应页面的 组件
+      name: uuidv4(),
       component: component,
-      // meta: 页面标题, 菜单图标, 页面权限(供指令权限用，可去掉)
       meta: { title: item.title, icon: item.icon || undefined }
     }
 
-    //有子菜单
     if (hasChildren) {
-      currentRouter.path = `/${uuid.v4()}`
-    } else if (item.path) {//页面
-      currentRouter.path = item.path
-      currentRouter.path = currentRouter.path.replace('//', '/')
+      currentRouter.path = `/${uuidv4()}`
+    } else if (item.path) {
+      currentRouter.path = item.path.replace('//', '/')
     }
 
-    // 重定向
     item.redirect && (currentRouter.redirect = item.redirect)
-    // 是否有子菜单，并递归处理
+
     if (hasChildren) {
-      // Recursion
       currentRouter.children = generator(item.children, currentRouter)
     }
     return currentRouter

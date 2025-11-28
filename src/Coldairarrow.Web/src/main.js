@@ -1,35 +1,33 @@
-// ie polyfill
-import '@babel/polyfill'
-
-import Vue from 'vue'
+import { createApp } from 'vue'
 import App from './App.vue'
-import router from './router'
-import store from './store/'
-// import { VueAxios } from './utils/request'
-import AxiosPlugin from '@/utils/plugin/axios-plugin'
+import router from './router/index.js'
+import { createPinia } from 'pinia'
+import AxiosPlugin from '@/utils/plugin/axios-plugin.js'
+import operatorPlugin from '@/utils/plugin/operator-plugin.js'
 
-// mock
-// import './mock'
+// Ant Design Vue
+import Antd from 'ant-design-vue'
+import 'ant-design-vue/dist/reset.css'
 
-import bootstrap from './core/bootstrap'
-import './core/use'
-import './permission' // permission control
-import './utils/filter' // global filter
-import operatorPlugin from './utils/plugin/operator-plugin'
+// dayjs 配置
+import dayjs from 'dayjs'
+import 'dayjs/locale/zh-cn'
+dayjs.locale('zh-cn')
 
-import moment from 'moment'
-moment.prototype.toJSON = function () { return moment(this).format("YYYY-MM-DD HH:mm:ss") }
+import bootstrap from './core/bootstrap.js'
+import './permission.js' // permission control
+import './utils/filter.js' // global filter
 
-Vue.config.productionTip = false
+const app = createApp(App)
+const pinia = createPinia()
 
-// mount axios Vue.$http and this.$http
-// Vue.use(VueAxios)
-Vue.use(AxiosPlugin)
-Vue.use(operatorPlugin)
+app.use(pinia)
+app.use(router)
+app.use(Antd)
+app.use(AxiosPlugin)
+app.use(operatorPlugin)
 
-new Vue({
-  router,
-  store,
-  created: bootstrap,
-  render: h => h(App)
-}).$mount('#app')
+// 执行 bootstrap
+bootstrap()
+
+app.mount('#app')

@@ -4,36 +4,36 @@
     <a-drawer
       v-if="isMobile()"
       placement="left"
-      :wrapClassName="`drawer-sider ${navTheme}`"
+      :class="`drawer-sider ${navTheme}`"
       :closable="false"
-      :visible="collapsed"
+      :open="collapsed"
       @close="drawerClose"
     >
-      <side-menu
+      <SideMenu
         mode="inline"
         :menus="menus"
         :theme="navTheme"
         :collapsed="false"
         :collapsible="true"
         @menuSelect="menuSelect"
-      ></side-menu>
+      />
     </a-drawer>
 
-    <side-menu
+    <SideMenu
       v-else-if="isSideMenu()"
       mode="inline"
       :menus="menus"
       :theme="navTheme"
       :collapsed="collapsed"
       :collapsible="true"
-    ></side-menu>
+    />
 
     <a-layout
       :class="[layoutMode, `content-width-${contentWidth}`]"
       :style="{ paddingLeft: contentPaddingLeft, minHeight: '100vh' }"
     >
       <!-- layout header -->
-      <global-header
+      <GlobalHeader
         :mode="layoutMode"
         :menus="menus"
         :theme="navTheme"
@@ -46,126 +46,115 @@
       <a-layout-content
         :style="{ height: '100%', margin: '24px 24px 0', paddingTop: fixedHeader ? '64px' : '0' }"
       >
-        <multi-tab v-if="multiTab"></multi-tab>
-        <transition name="page-transition">
-          <!-- <route-view /> -->
-          <div class="content">
-            <div class="page-header-index-wide">
-              <slot>
-                <!-- keep-alive  -->
-                <keep-alive v-if="multiTab">
-                  <router-view ref="content" />
-                </keep-alive>
-                <router-view v-else ref="content" />
-              </slot>
-            </div>
+        <MultiTab v-if="multiTab" />
+        <div class="content">
+          <div class="page-header-index-wide">
+            <slot>
+              <router-view v-slot="{ Component }">
+                <transition name="page-transition">
+                  <keep-alive v-if="multiTab">
+                    <component :is="Component" />
+                  </keep-alive>
+                  <component v-else :is="Component" />
+                </transition>
+              </router-view>
+            </slot>
           </div>
-        </transition>
+        </div>
       </a-layout-content>
-
-      <!-- layout footer -->
-      <!-- <a-layout-footer>
-        <global-footer />
-      </a-layout-footer>-->
-
-      <!-- Setting Drawer (show in development mode) -->
-      <!-- <setting-drawer v-if="!production"></setting-drawer> -->
     </a-layout>
   </a-layout>
 </template>
 
-<script>
-import { triggerWindowResizeEvent } from '@/utils/util'
-import { mapState, mapActions } from 'vuex'
-import { mixin, mixinDevice } from '@/utils/mixin'
-import config from '@/config/defaultSettings'
+<script setup>
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { triggerWindowResizeEvent } from '@/utils/util.js'
+import { useAppSettings, useDevice } from '@/utils/mixin.js'
+import config from '@/config/defaultSettings.js'
 
-import RouteView from './RouteView'
-import MultiTab from '@/components/MultiTab'
-import SideMenu from '@/components/Menu/SideMenu'
-import GlobalHeader from '@/components/GlobalHeader'
-import GlobalFooter from '@/components/GlobalFooter'
-// import SettingDrawer from '@/components/SettingDrawer'
-import { getAddRouter } from '@/utils/routerUtil'
+import RouteView from './RouteView.vue'
+import MultiTab from '@/components/MultiTab/index.js'
+import SideMenu from '@/components/Menu/SideMenu.vue'
+import GlobalHeader from '@/components/GlobalHeader/index.js'
+import GlobalFooter from '@/components/GlobalFooter/index.js'
+import { getAddRouterRef } from '@/utils/routerUtil.js'
+import { useAppStore } from '@/store/index.js'
 
-export default {
-  name: 'BasicLayout',
-  mixins: [mixin, mixinDevice],
-  components: {
-    RouteView,
-    MultiTab,
-    SideMenu,
-    GlobalHeader,
-    GlobalFooter
-    // SettingDrawer
-  },
-  data() {
-    return {
-      production: config.production,
-      collapsed: false,
-      menus: []
-    }
-  },
-  computed: {
-    ...mapState({
-      // 动态主路由
-      mainMenu: state => getAddRouter()
-    }),
-    contentPaddingLeft() {
-      if (!this.fixSidebar || this.isMobile()) {
-        return '0'
-      }
-      if (this.sidebarOpened) {
-        return '200px'
-      }
-      return '80px'
-    }
-  },
-  watch: {
-    sidebarOpened(val) {
-      this.collapsed = !val
-    }
-  },
-  created() {
-    this.menus = this.mainMenu.find(item => item.path === '/').children
-    this.collapsed = !this.sidebarOpened
-  },
-  mounted() {
-    const userAgent = navigator.userAgent
-    if (userAgent.indexOf('Edge') > -1) {
-      this.$nextTick(() => {
-        this.collapsed = !this.collapsed
-        setTimeout(() => {
-          this.collapsed = !this.collapsed
-        }, 16)
-      })
-    }
-  },
-  methods: {
-    ...mapActions(['setSidebar']),
-    toggle() {
-      this.collapsed = !this.collapsed
-      this.setSidebar(!this.collapsed)
-      triggerWindowResizeEvent()
-    },
-    paddingCalc() {
-      let left = ''
-      if (this.sidebarOpened) {
-        left = this.isDesktop() ? '200px' : '80px'
-      } else {
-        left = (this.isMobile() && '0') || (this.fixSidebar && '80px') || '0'
-      }
-      return left
-    },
-    menuSelect() {
-      if (!this.isDesktop()) {
-        this.collapsed = false
-      }
-    },
-    drawerClose() {
-      this.collapsed = false
-    }
+const appStore = useAppStore()
+const { layoutMode, navTheme, fixedHeader, fixSiderbar, contentWidth, sidebarOpened, multiTab, isTopMenu, isSideMenu } = useAppSettings()
+const { device, isMobile, isDesktop } = useDevice()
+
+const production = config.production
+const collapsed = ref(false)
+
+// 动态主路由 - 使用响应式引用
+const addRouterRef = getAddRouterRef()
+
+// 菜单 - 使用计算属性从主路由中获取
+const menus = computed(() => {
+  const rootRoute = addRouterRef.value.find(item => item.path === '/')
+  return rootRoute ? rootRoute.children : []
+})
+
+const contentPaddingLeft = computed(() => {
+  if (!fixSiderbar.value || isMobile()) {
+    return '0'
   }
+  if (sidebarOpened.value) {
+    return '200px'
+  }
+  return '80px'
+})
+
+watch(sidebarOpened, (val) => {
+  collapsed.value = !val
+})
+
+// created
+collapsed.value = !sidebarOpened.value
+
+onMounted(() => {
+  const userAgent = navigator.userAgent
+  if (userAgent.indexOf('Edge') > -1) {
+    nextTick(() => {
+      collapsed.value = !collapsed.value
+      setTimeout(() => {
+        collapsed.value = !collapsed.value
+      }, 16)
+    })
+  }
+})
+
+const toggle = () => {
+  collapsed.value = !collapsed.value
+  appStore.setSidebar(!collapsed.value)
+  triggerWindowResizeEvent()
+}
+
+const paddingCalc = () => {
+  let left = ''
+  if (sidebarOpened.value) {
+    left = isDesktop() ? '200px' : '80px'
+  } else {
+    left = (isMobile() && '0') || (fixSiderbar.value && '80px') || '0'
+  }
+  return left
+}
+
+const menuSelect = () => {
+  if (!isDesktop()) {
+    collapsed.value = false
+  }
+}
+
+const drawerClose = () => {
+  collapsed.value = false
+}
+</script>
+
+<script>
+export default {
+  name: 'BasicLayout'
 }
 </script>
 

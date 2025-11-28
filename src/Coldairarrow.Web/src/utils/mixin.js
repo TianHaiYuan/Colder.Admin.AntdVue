@@ -1,31 +1,97 @@
-// import Vue from 'vue'
-import { deviceEnquire, DEVICE_TYPE } from '@/utils/device'
-import { mapState } from 'vuex'
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useAppStore } from '@/store/index.js'
+import { deviceEnquire, DEVICE_TYPE } from '@/utils/device.js'
 
-// const mixinsComputed = Vue.config.optionMergeStrategies.computed
-// const mixinsMethods = Vue.config.optionMergeStrategies.methods
+// Vue 3 Composable 替代 mixin
+export function useAppSettings() {
+  const appStore = useAppStore()
+  const { layout, theme, color, weak, fixedHeader, fixSiderbar, contentWidth, autoHideHeader, sidebar, multiTab } = storeToRefs(appStore)
 
+  const layoutMode = computed(() => layout.value)
+  const navTheme = computed(() => theme.value)
+  const primaryColor = computed(() => color.value)
+  const colorWeak = computed(() => weak.value)
+  const sidebarOpened = computed(() => sidebar.value)
+
+  const isTopMenu = () => layoutMode.value === 'topmenu'
+  const isSideMenu = () => !isTopMenu()
+
+  return {
+    layoutMode,
+    navTheme,
+    primaryColor,
+    colorWeak,
+    fixedHeader,
+    fixSiderbar,
+    fixSidebar: fixSiderbar,
+    contentWidth,
+    autoHideHeader,
+    sidebarOpened,
+    multiTab,
+    isTopMenu,
+    isSideMenu
+  }
+}
+
+export function useDevice() {
+  const appStore = useAppStore()
+  const { device } = storeToRefs(appStore)
+
+  const isMobile = () => device.value === DEVICE_TYPE.MOBILE
+  const isDesktop = () => device.value === DEVICE_TYPE.DESKTOP
+  const isTablet = () => device.value === DEVICE_TYPE.TABLET
+
+  return {
+    device,
+    isMobile,
+    isDesktop,
+    isTablet
+  }
+}
+
+// 保持向后兼容的 Options API mixin
 const mixin = {
   computed: {
-    ...mapState({
-      layoutMode: state => state.app.layout,
-      navTheme: state => state.app.theme,
-      primaryColor: state => state.app.color,
-      colorWeak: state => state.app.weak,
-      fixedHeader: state => state.app.fixedHeader,
-      fixSiderbar: state => state.app.fixSiderbar,
-      fixSidebar: state => state.app.fixSiderbar,
-      contentWidth: state => state.app.contentWidth,
-      autoHideHeader: state => state.app.autoHideHeader,
-      sidebarOpened: state => state.app.sidebar,
-      multiTab: state => state.app.multiTab
-    })
+    layoutMode() {
+      return useAppStore().layout
+    },
+    navTheme() {
+      return useAppStore().theme
+    },
+    primaryColor() {
+      return useAppStore().color
+    },
+    colorWeak() {
+      return useAppStore().weak
+    },
+    fixedHeader() {
+      return useAppStore().fixedHeader
+    },
+    fixSiderbar() {
+      return useAppStore().fixSiderbar
+    },
+    fixSidebar() {
+      return useAppStore().fixSiderbar
+    },
+    contentWidth() {
+      return useAppStore().contentWidth
+    },
+    autoHideHeader() {
+      return useAppStore().autoHideHeader
+    },
+    sidebarOpened() {
+      return useAppStore().sidebar
+    },
+    multiTab() {
+      return useAppStore().multiTab
+    }
   },
   methods: {
-    isTopMenu () {
+    isTopMenu() {
       return this.layoutMode === 'topmenu'
     },
-    isSideMenu () {
+    isSideMenu() {
       return !this.isTopMenu()
     }
   }
@@ -33,40 +99,40 @@ const mixin = {
 
 const mixinDevice = {
   computed: {
-    ...mapState({
-      device: state => state.app.device
-    })
+    device() {
+      return useAppStore().device
+    }
   },
   methods: {
-    isMobile () {
+    isMobile() {
       return this.device === DEVICE_TYPE.MOBILE
     },
-    isDesktop () {
+    isDesktop() {
       return this.device === DEVICE_TYPE.DESKTOP
     },
-    isTablet () {
+    isTablet() {
       return this.device === DEVICE_TYPE.TABLET
     }
   }
 }
 
 const AppDeviceEnquire = {
-  mounted () {
-    const { $store } = this
+  mounted() {
+    const appStore = useAppStore()
     deviceEnquire(deviceType => {
       switch (deviceType) {
         case DEVICE_TYPE.DESKTOP:
-          $store.commit('TOGGLE_DEVICE', 'desktop')
-          $store.dispatch('setSidebar', true)
+          appStore.toggleDevice('desktop')
+          appStore.setSidebar(true)
           break
         case DEVICE_TYPE.TABLET:
-          $store.commit('TOGGLE_DEVICE', 'tablet')
-          $store.dispatch('setSidebar', false)
+          appStore.toggleDevice('tablet')
+          appStore.setSidebar(false)
           break
         case DEVICE_TYPE.MOBILE:
         default:
-          $store.commit('TOGGLE_DEVICE', 'mobile')
-          $store.dispatch('setSidebar', true)
+          appStore.toggleDevice('mobile')
+          appStore.setSidebar(true)
           break
       }
     })

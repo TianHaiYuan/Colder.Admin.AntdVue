@@ -1,4 +1,5 @@
 ﻿using Coldairarrow.Entity.Base_Manage;
+using Coldairarrow.IBusiness;
 using Coldairarrow.Util;
 using EFCore.Sharding;
 using LinqKit;
@@ -9,8 +10,8 @@ namespace Coldairarrow.Business.Base_Manage
 {
     public class Base_UserLogBusiness : BaseBusiness<Base_UserLog>, IBase_UserLogBusiness, ITransientDependency
     {
-        public Base_UserLogBusiness(IDbAccessor db)
-            : base(db)
+        public Base_UserLogBusiness(IDbAccessor db, IOperator @operator = null)
+            : base(db, @operator)
         {
         }
 

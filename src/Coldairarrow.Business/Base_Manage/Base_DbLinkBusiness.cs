@@ -1,4 +1,5 @@
 ﻿using Coldairarrow.Entity.Base_Manage;
+using Coldairarrow.IBusiness;
 using Coldairarrow.Util;
 using EFCore.Sharding;
 using System.Collections.Generic;
@@ -8,8 +9,8 @@ namespace Coldairarrow.Business.Base_Manage
 {
     public class Base_DbLinkBusiness : BaseBusiness<Base_DbLink>, IBase_DbLinkBusiness, ITransientDependency
     {
-        public Base_DbLinkBusiness(IDbAccessor db)
-            : base(db)
+        public Base_DbLinkBusiness(IDbAccessor db, IOperator @operator = null)
+            : base(db, @operator)
         {
         }
 

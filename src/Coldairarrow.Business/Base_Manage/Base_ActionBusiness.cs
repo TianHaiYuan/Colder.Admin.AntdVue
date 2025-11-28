@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Coldairarrow.Entity.Base_Manage;
+using Coldairarrow.IBusiness;
 using Coldairarrow.Util;
 using EFCore.Sharding;
 using Microsoft.EntityFrameworkCore;
@@ -13,8 +14,8 @@ namespace Coldairarrow.Business.Base_Manage
     public class Base_ActionBusiness : BaseBusiness<Base_Action>, IBase_ActionBusiness, ITransientDependency
     {
         readonly IMapper _mapper;
-        public Base_ActionBusiness(IDbAccessor db, IMapper mapper)
-            : base(db)
+        public Base_ActionBusiness(IDbAccessor db, IMapper mapper, IOperator @operator = null)
+            : base(db, @operator)
         {
             _mapper = mapper;
         }

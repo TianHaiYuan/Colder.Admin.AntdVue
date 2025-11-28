@@ -14,7 +14,7 @@
         </div>
       </div>
 
-      <route-view></route-view>
+      <RouteView />
 
       <!-- <div class="footer">
         <div class="links">
@@ -30,28 +30,29 @@
   </div>
 </template>
 
-<script>
-import RouteView from './RouteView'
-import { mixinDevice } from '@/utils/mixin'
+<script setup>
+import { onMounted, onBeforeUnmount } from 'vue'
+import RouteView from './RouteView.vue'
+import { useDevice } from '@/utils/mixin.js'
 
+const { device } = useDevice()
+
+const getTitle = () => {
+  return import.meta.env.VITE_APP_ProjectName || 'Admin'
+}
+
+onMounted(() => {
+  document.body.classList.add('userLayout')
+})
+
+onBeforeUnmount(() => {
+  document.body.classList.remove('userLayout')
+})
+</script>
+
+<script>
 export default {
-  name: 'UserLayout',
-  components: { RouteView },
-  mixins: [mixinDevice],
-  data() {
-    return {}
-  },
-  mounted() {
-    document.body.classList.add('userLayout')
-  },
-  beforeDestroy() {
-    document.body.classList.remove('userLayout')
-  },
-  methods: {
-    getTitle() {
-      return process.env.VUE_APP_ProjectName
-    }
-  }
+  name: 'UserLayout'
 }
 </script>
 

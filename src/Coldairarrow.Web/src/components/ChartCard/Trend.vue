@@ -2,51 +2,58 @@
   <div class="chart-trend">
     {{ term }}
     <span>{{ rate }}%</span>
-    <span :class="['trend-icon', trend]"><a-icon :type="'caret-' + trend"/></span>
+    <span :class="['trend-icon', trend]">
+      <CaretUpOutlined v-if="trend === 'up'" />
+      <CaretDownOutlined v-else />
+    </span>
   </div>
 </template>
 
+<script setup>
+import { ref, onMounted } from 'vue'
+import { CaretUpOutlined, CaretDownOutlined } from '@ant-design/icons-vue'
+
+const props = defineProps({
+  term: {
+    type: String,
+    default: '',
+    required: true
+  },
+  percentage: {
+    type: Number,
+    default: null
+  },
+  type: {
+    type: Boolean,
+    default: null
+  },
+  target: {
+    type: Number,
+    default: 0
+  },
+  value: {
+    type: Number,
+    default: 0
+  },
+  fixed: {
+    type: Number,
+    default: 2
+  }
+})
+
+const trend = ref(props.type ? 'up' : 'down')
+const rate = ref(props.percentage)
+
+onMounted(() => {
+  const type = props.type === null ? props.value >= props.target : props.type
+  trend.value = type ? 'up' : 'down'
+  rate.value = (props.percentage === null ? Math.abs(props.value - props.target) * 100 / props.target : props.percentage).toFixed(props.fixed)
+})
+</script>
+
 <script>
 export default {
-  name: 'Trend',
-  props: {
-    term: {
-      type: String,
-      default: '',
-      required: true
-    },
-    percentage: {
-      type: Number,
-      default: null
-    },
-    type: {
-      type: Boolean,
-      default: null
-    },
-    target: {
-      type: Number,
-      default: 0
-    },
-    value: {
-      type: Number,
-      default: 0
-    },
-    fixed: {
-      type: Number,
-      default: 2
-    }
-  },
-  data () {
-    return {
-      trend: this.type && 'up' || 'down',
-      rate: this.percentage
-    }
-  },
-  created () {
-    const type = this.type === null ? this.value >= this.target : this.type
-    this.trend = type ? 'up' : 'down'
-    this.rate = (this.percentage === null ? Math.abs(this.value - this.target) * 100 / this.target : this.percentage).toFixed(this.fixed)
-  }
+  name: 'Trend'
 }
 </script>
 

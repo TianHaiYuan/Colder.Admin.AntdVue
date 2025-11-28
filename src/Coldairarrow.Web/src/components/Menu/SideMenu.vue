@@ -3,59 +3,59 @@
     :class="['sider', isDesktop() ? null : 'shadow', theme, fixSiderbar ? 'ant-fixed-sidemenu' : null ]"
     width="200px"
     :collapsible="collapsible"
-    v-model="collapsed"
+    :collapsed="collapsed"
     :trigger="null">
-    <logo />
-    <s-menu
+    <Logo />
+    <SMenu
       :collapsed="collapsed"
       :menu="menus"
       :theme="theme"
       :mode="mode"
       @select="onSelect"
-      style="padding: 16px 0px;"></s-menu>
+      style="padding: 16px 0px;" />
   </a-layout-sider>
-
 </template>
 
-<script>
-import Logo from '@/components/tools/Logo'
-import SMenu from './index'
-import { mixin, mixinDevice } from '@/utils/mixin'
+<script setup>
+import Logo from '@/components/tools/Logo.vue'
+import SMenu from './index.js'
+import { useAppSettings, useDevice } from '@/utils/mixin.js'
 
-export default {
-  name: 'SideMenu',
-  components: { Logo, SMenu },
-  mixins: [mixin, mixinDevice],
-  props: {
-    mode: {
-      type: String,
-      required: false,
-      default: 'inline'
-    },
-    theme: {
-      type: String,
-      required: false,
-      default: 'dark'
-    },
-    collapsible: {
-      type: Boolean,
-      required: false,
-      default: false
-    },
-    collapsed: {
-      type: Boolean,
-      required: false,
-      default: false
-    },
-    menus: {
-      type: Array,
-      required: true
-    }
+const props = defineProps({
+  mode: {
+    type: String,
+    default: 'inline'
   },
-  methods: {
-    onSelect (obj) {
-      this.$emit('menuSelect', obj)
-    }
+  theme: {
+    type: String,
+    default: 'dark'
+  },
+  collapsible: {
+    type: Boolean,
+    default: false
+  },
+  collapsed: {
+    type: Boolean,
+    default: false
+  },
+  menus: {
+    type: Array,
+    required: true
   }
+})
+
+const emit = defineEmits(['menuSelect'])
+
+const { fixSiderbar } = useAppSettings()
+const { isDesktop } = useDevice()
+
+const onSelect = (obj) => {
+  emit('menuSelect', obj)
+}
+</script>
+
+<script>
+export default {
+  name: 'SideMenu'
 }
 </script>

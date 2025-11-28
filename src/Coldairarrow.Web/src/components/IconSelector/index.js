@@ -1,2 +1,2 @@
-import IconSelector from './IconSelector'
+import IconSelector from './IconSelector.vue'
 export default IconSelector

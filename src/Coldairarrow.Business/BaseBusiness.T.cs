@@ -26,11 +26,11 @@ namespace Coldairarrow.Business
         /// 构造函数
         /// </summary>
         /// <param name="db">注入数据库</param>
-        public BaseBusiness(IDbAccessor db)
+        /// <param name="operator">当前操作者</param>
+        public BaseBusiness(IDbAccessor db, IOperator @operator = null)
         {
             Db = db;
-            // 从服务提供者获取 IOperator（可能为 null）
-            _operator = GlobalServiceProvider.ServiceProvider?.GetService<IOperator>();
+            _operator = @operator;
         }
 
         #endregion

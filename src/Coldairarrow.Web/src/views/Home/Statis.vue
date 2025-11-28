@@ -3,49 +3,55 @@
   <div class="page-header-index-wide">
     <a-row :gutter="24">
       <a-col :sm="24" :md="12" :xl="6" :style="{ marginBottom: '24px' }">
-        <chart-card :loading="loading" title="今日销售额" total="￥10,000">
-          <a-tooltip title="指标说明" slot="action">
-            <a-icon type="info-circle-o" />
-          </a-tooltip>
-        </chart-card>
+        <ChartCard :loading="loading" title="今日销售额" total="￥10,000">
+          <template #action>
+            <a-tooltip title="指标说明">
+              <InfoCircleOutlined />
+            </a-tooltip>
+          </template>
+        </ChartCard>
       </a-col>
       <a-col :sm="24" :md="12" :xl="6" :style="{ marginBottom: '24px' }">
-        <chart-card :loading="loading" title="昨日销售额" total="￥8,000">
-          <a-tooltip title="指标说明" slot="action">
-            <a-icon type="info-circle-o" />
-          </a-tooltip>
-        </chart-card>
+        <ChartCard :loading="loading" title="昨日销售额" total="￥8,000">
+          <template #action>
+            <a-tooltip title="指标说明">
+              <InfoCircleOutlined />
+            </a-tooltip>
+          </template>
+        </ChartCard>
       </a-col>
       <a-col :sm="24" :md="12" :xl="6" :style="{ marginBottom: '24px' }">
-        <chart-card :loading="loading" title="本月销售额" total="￥300,000">
-          <a-tooltip title="指标说明" slot="action">
-            <a-icon type="info-circle-o" />
-          </a-tooltip>
-        </chart-card>
+        <ChartCard :loading="loading" title="本月销售额" total="￥300,000">
+          <template #action>
+            <a-tooltip title="指标说明">
+              <InfoCircleOutlined />
+            </a-tooltip>
+          </template>
+        </ChartCard>
       </a-col>
       <a-col :sm="24" :md="12" :xl="6" :style="{ marginBottom: '24px' }">
-        <chart-card :loading="loading" title="本年销售额" total="￥4000,000">
-          <a-tooltip title="指标说明" slot="action">
-            <a-icon type="info-circle-o" />
-          </a-tooltip>
-        </chart-card>
+        <ChartCard :loading="loading" title="本年销售额" total="￥4000,000">
+          <template #action>
+            <a-tooltip title="指标说明">
+              <InfoCircleOutlined />
+            </a-tooltip>
+          </template>
+        </ChartCard>
       </a-col>
     </a-row>
   </div>
 </template>
-<script>
-import ChartCard from '@/components/ChartCard/ChartCard'
-import Trend from '@/components/ChartCard/Trend'
 
+<script setup>
+import { ref } from 'vue'
+import { InfoCircleOutlined } from '@ant-design/icons-vue'
+import ChartCard from '@/components/ChartCard/ChartCard.vue'
+
+const loading = ref(false)
+</script>
+
+<script>
 export default {
-  components: {
-    ChartCard,
-    Trend
-  },
-  data() {
-    return {
-      loading: false
-    }
-  }
+  name: 'StatisView'
 }
 </script>

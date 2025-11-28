@@ -1,5 +1,4 @@
-import Vue from 'vue'
-import store from '@/store/'
+import { useAppStore } from '@/store/index.js'
 import {
   DEFAULT_COLOR,
   DEFAULT_THEME,
@@ -11,20 +10,33 @@ import {
   DEFAULT_FIXED_SIDEMENU,
   DEFAULT_CONTENT_WIDTH_TYPE,
   DEFAULT_MULTI_TAB
-} from '@/store/mutation-types'
-import config from '@/config/defaultSettings'
+} from '@/store/mutation-types.js'
+import config from '@/config/defaultSettings.js'
+
+// 简单的 localStorage 封装
+const storage = {
+  get(key, defaultValue) {
+    const value = localStorage.getItem(key)
+    if (value === null) return defaultValue
+    try {
+      return JSON.parse(value)
+    } catch {
+      return value
+    }
+  }
+}
 
 export default function Initializer() {
-  // console.log(`API_URL: ${process.env.VUE_APP_API_BASE_URL}`)
+  const appStore = useAppStore()
 
-  store.commit('SET_SIDEBAR_TYPE', Vue.ls.get(SIDEBAR_TYPE, true))
-  store.commit('TOGGLE_THEME', Vue.ls.get(DEFAULT_THEME, config.navTheme))
-  store.commit('TOGGLE_LAYOUT_MODE', Vue.ls.get(DEFAULT_LAYOUT_MODE, config.layout))
-  store.commit('TOGGLE_FIXED_HEADER', Vue.ls.get(DEFAULT_FIXED_HEADER, config.fixedHeader))
-  store.commit('TOGGLE_FIXED_SIDERBAR', Vue.ls.get(DEFAULT_FIXED_SIDEMENU, config.fixSiderbar))
-  store.commit('TOGGLE_CONTENT_WIDTH', Vue.ls.get(DEFAULT_CONTENT_WIDTH_TYPE, config.contentWidth))
-  store.commit('TOGGLE_FIXED_HEADER_HIDDEN', Vue.ls.get(DEFAULT_FIXED_HEADER_HIDDEN, config.autoHideHeader))
-  store.commit('TOGGLE_WEAK', Vue.ls.get(DEFAULT_COLOR_WEAK, config.colorWeak))
-  store.commit('TOGGLE_COLOR', Vue.ls.get(DEFAULT_COLOR, config.primaryColor))
-  store.commit('TOGGLE_MULTI_TAB', Vue.ls.get(DEFAULT_MULTI_TAB, config.multiTab))
+  appStore.setSidebar(storage.get(SIDEBAR_TYPE, true))
+  appStore.toggleTheme(storage.get(DEFAULT_THEME, config.navTheme))
+  appStore.toggleLayoutMode(storage.get(DEFAULT_LAYOUT_MODE, config.layout))
+  appStore.toggleFixedHeader(storage.get(DEFAULT_FIXED_HEADER, config.fixedHeader))
+  appStore.toggleFixSiderbar(storage.get(DEFAULT_FIXED_SIDEMENU, config.fixSiderbar))
+  appStore.toggleContentWidth(storage.get(DEFAULT_CONTENT_WIDTH_TYPE, config.contentWidth))
+  appStore.toggleFixedHeaderHidden(storage.get(DEFAULT_FIXED_HEADER_HIDDEN, config.autoHideHeader))
+  appStore.toggleWeak(storage.get(DEFAULT_COLOR_WEAK, config.colorWeak))
+  appStore.toggleColor(storage.get(DEFAULT_COLOR, config.primaryColor))
+  appStore.toggleMultiTab(storage.get(DEFAULT_MULTI_TAB, config.multiTab))
 }

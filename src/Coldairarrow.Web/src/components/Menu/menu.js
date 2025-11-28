@@ -1,7 +1,7 @@
-import Menu from 'ant-design-vue/es/menu'
-import Icon from 'ant-design-vue/es/icon'
-
-const { Item, SubMenu } = Menu
+import { h, ref, computed, watch, onMounted } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
+import { Menu } from 'ant-design-vue'
+import * as Icons from '@ant-design/icons-vue'
 
 export default {
   name: 'SMenu',
@@ -12,169 +12,177 @@ export default {
     },
     theme: {
       type: String,
-      required: false,
       default: 'dark'
     },
     mode: {
       type: String,
-      required: false,
       default: 'inline'
     },
     collapsed: {
       type: Boolean,
-      required: false,
       default: false
     }
   },
-  data () {
-    return {
-      openKeys: [],
-      selectedKeys: [],
-      cachedOpenKeys: []
-    }
-  },
-  computed: {
-    rootSubmenuKeys: vm => {
-      const keys = []
-      vm.menu.forEach(item => keys.push(item.path))
-      return keys
-    }
-  },
-  mounted () {
-    this.updateMenu()
-  },
-  watch: {
-    collapsed (val) {
-      if (val) {
-        this.cachedOpenKeys = this.openKeys.concat()
-        this.openKeys = []
-      } else {
-        this.openKeys = this.cachedOpenKeys
-      }
-    },
-    $route: function () {
-      this.updateMenu()
-    }
-  },
-  methods: {
-    // select menu item
-    onOpenChange (openKeys) {
-      // 在水平模式下时执行，并且不再执行后续
-      if (this.mode === 'horizontal') {
-        this.openKeys = openKeys
-        return
-      }
-      // 非水平模式时
-      const latestOpenKey = openKeys.find(key => !this.openKeys.includes(key))
-      if (!this.rootSubmenuKeys.includes(latestOpenKey)) {
-        this.openKeys = openKeys
-      } else {
-        this.openKeys = latestOpenKey ? [latestOpenKey] : []
-      }
-    },
-    updateMenu () {
-      const routes = this.$route.matched.concat()
-      const { hidden } = this.$route.meta
-      if (routes.length >= 3 && hidden) {
-        routes.pop()
-        this.selectedKeys = [routes[routes.length - 1].path]
-      } else {
-        this.selectedKeys = [routes.pop().path]
-      }
-      const openKeys = []
-      if (this.mode === 'inline') {
-        routes.forEach(item => {
-          openKeys.push(item.path)
-        })
-      }
+  emits: ['select'],
+  setup(props, { emit }) {
+    const route = useRoute()
+    const router = useRouter()
 
-      this.collapsed ? (this.cachedOpenKeys = openKeys) : (this.openKeys = openKeys)
-    },
+    const openKeys = ref([])
+    const selectedKeys = ref([])
+    const cachedOpenKeys = ref([])
 
-    // render
-    renderItem (menu) {
-      if (!menu.hidden) {
-        return menu.children && !menu.hideChildrenInMenu ? this.renderSubMenu(menu) : this.renderMenuItem(menu)
+    const rootSubmenuKeys = computed(() => {
+      return props.menu.map(item => item.path)
+    })
+
+    // 根据当前路由路径查找菜单项
+    const findMenuByPath = (menus, path) => {
+      for (const menu of menus) {
+        if (menu.children && menu.children.length > 0) {
+          for (const child of menu.children) {
+            if (child.path === path) {
+              return { parent: menu, child }
+            }
+          }
+        }
       }
       return null
-    },
-    renderMenuItem (menu) {
-      const target = menu.meta.target || null
-      const tag = target && 'a' || 'router-link'
-      const props = { to: { name: menu.name } }
-      const attrs = { href: menu.path, target: menu.meta.target }
+    }
 
-      if (menu.children && menu.hideChildrenInMenu) {
-        // 把有子菜单的 并且 父菜单是要隐藏子菜单的
-        // 都给子菜单增加一个 hidden 属性
-        // 用来给刷新页面时， selectedKeys 做控制用
+    const updateMenu = () => {
+      const currentPath = route.path
+
+      // 查找当前路径对应的菜单
+      const found = findMenuByPath(props.menu, currentPath)
+
+      if (found) {
+        selectedKeys.value = [found.child.path]
+        if (props.mode === 'inline' && !props.collapsed) {
+          openKeys.value = [found.parent.path]
+        }
+      } else {
+        // 默认展开第一个菜单
+        if (props.menu.length > 0 && props.mode === 'inline' && !props.collapsed) {
+          openKeys.value = [props.menu[0].path]
+        }
+      }
+    }
+
+    watch(() => props.collapsed, (val) => {
+      if (val) {
+        cachedOpenKeys.value = openKeys.value.concat()
+        openKeys.value = []
+      } else {
+        openKeys.value = cachedOpenKeys.value
+      }
+    })
+
+    watch(() => route.path, () => {
+      updateMenu()
+    })
+
+    onMounted(() => {
+      updateMenu()
+    })
+
+    const onOpenChange = (keys) => {
+      if (props.mode === 'horizontal') {
+        openKeys.value = keys
+        return
+      }
+      const latestOpenKey = keys.find(key => !openKeys.value.includes(key))
+      if (!rootSubmenuKeys.value.includes(latestOpenKey)) {
+        openKeys.value = keys
+      } else {
+        openKeys.value = latestOpenKey ? [latestOpenKey] : []
+      }
+    }
+
+    const onSelect = (obj) => {
+      selectedKeys.value = obj.selectedKeys
+      emit('select', obj)
+    }
+
+    const renderIcon = (icon) => {
+      if (!icon || icon === 'none') return null
+      // 尝试从 Icons 中获取图标组件
+      const iconName = icon.replace(/-([a-z])/g, (g) => g[1].toUpperCase())
+      const capitalizedName = iconName.charAt(0).toUpperCase() + iconName.slice(1) + 'Outlined'
+      const IconComponent = Icons[capitalizedName] || Icons[icon] || Icons['AppstoreOutlined']
+      return IconComponent ? h(IconComponent) : null
+    }
+
+    const hasChildren = (menu) => {
+      const result = menu.children && menu.children.length > 0
+      return result
+    }
+
+    const renderMenuItem = (menu) => {
+      const target = menu.meta?.target || null
+
+      if (hasChildren(menu) && menu.hideChildrenInMenu) {
         menu.children.forEach(item => {
-          item.meta = Object.assign(item.meta, { hidden: true })
+          item.meta = Object.assign(item.meta || {}, { hidden: true })
         })
       }
 
-      return (
-        <Item {...{ key: menu.path }}>
-          <tag {...{ props, attrs }}>
-            {this.renderIcon(menu.meta.icon)}
-            <span>{menu.meta.title}</span>
-          </tag>
-        </Item>
-      )
-    },
-    renderSubMenu (menu) {
-      const itemArr = []
-      if (!menu.hideChildrenInMenu) {
-        menu.children.forEach(item => itemArr.push(this.renderItem(item)))
-      }
-      return (
-        <SubMenu {...{ key: menu.path }}>
-          <span slot="title">
-            {this.renderIcon(menu.meta.icon)}
-            <span>{menu.meta.title}</span>
-          </span>
-          {itemArr}
-        </SubMenu>
-      )
-    },
-    renderIcon (icon) {
-      if (icon === 'none' || icon === undefined) {
-        return null
-      }
-      const props = {}
-      typeof (icon) === 'object' ? props.component = icon : props.type = icon
-      return (
-        <Icon {... { props } }/>
-      )
-    }
-  },
+      const icon = renderIcon(menu.meta?.icon)
+      const title = menu.meta?.title || ''
 
-  render () {
-    const { mode, theme, menu } = this
-    const props = {
-      mode: mode,
-      theme: theme,
-      openKeys: this.openKeys
-    }
-    const on = {
-      select: obj => {
-        this.selectedKeys = obj.selectedKeys
-        this.$emit('select', obj)
-      },
-      openChange: this.onOpenChange
+      if (target) {
+        return h(Menu.Item, { key: menu.path }, {
+          default: () => h('a', { href: menu.path, target }, [icon, h('span', null, title)])
+        })
+      }
+
+      // 使用 RouterLink 组件进行导航
+      return h(Menu.Item, { key: menu.path }, {
+        default: () => h(RouterLink, { to: menu.path }, {
+          default: () => [icon, h('span', null, title)]
+        })
+      })
     }
 
-    const menuTree = menu.map(item => {
-      if (item.hidden) {
-        return null
+    const renderSubMenu = (menu) => {
+      const children = []
+      if (!menu.hideChildrenInMenu && hasChildren(menu)) {
+        menu.children.forEach(item => {
+          const rendered = renderItem(item)
+          if (rendered) children.push(rendered)
+        })
       }
-      return this.renderItem(item)
-    })
-    // {...{ props, on: on }}
-    return (
-      <Menu vModel={this.selectedKeys} {...{ props, on: on }}>
-        {menuTree}
-      </Menu>
-    )
+
+      const icon = renderIcon(menu.meta?.icon)
+      const title = menu.meta?.title || ''
+
+      return h(Menu.SubMenu, { key: menu.path }, {
+        title: () => [icon, h('span', null, title)],
+        default: () => children
+      })
+    }
+
+    const renderItem = (menu) => {
+      if (menu.hidden) return null
+      return hasChildren(menu) && !menu.hideChildrenInMenu
+        ? renderSubMenu(menu)
+        : renderMenuItem(menu)
+    }
+
+    return () => {
+      const menuTree = props.menu
+        .filter(item => !item.hidden)
+        .map(item => renderItem(item))
+        .filter(Boolean)
+
+      return h(Menu, {
+        mode: props.mode,
+        theme: props.theme,
+        openKeys: openKeys.value,
+        selectedKeys: selectedKeys.value,
+        onOpenChange,
+        onSelect
+      }, () => menuTree)
+    }
   }
 }

@@ -1,4 +1,5 @@
 ﻿using Coldairarrow.Entity.Base_Manage;
+using Coldairarrow.IBusiness;
 using Coldairarrow.Util;
 using EFCore.Sharding;
 using LinqKit;
@@ -11,8 +12,8 @@ namespace Coldairarrow.Business.Base_Manage
 {
     public class Base_AppSecretBusiness : BaseBusiness<Base_AppSecret>, IBase_AppSecretBusiness, ITransientDependency
     {
-        public Base_AppSecretBusiness(IDbAccessor db)
-            : base(db)
+        public Base_AppSecretBusiness(IDbAccessor db, IOperator @operator = null)
+            : base(db, @operator)
         {
         }
 

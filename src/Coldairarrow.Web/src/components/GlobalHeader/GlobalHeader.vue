@@ -6,18 +6,21 @@
         :class="[fixedHeader && 'ant-header-fixedHeader', sidebarOpened ? 'ant-header-side-opened' : 'ant-header-side-closed', ]"
         :style="{ padding: '0' }">
         <div v-if="mode === 'sidemenu'" class="header">
-          <a-icon v-if="device==='mobile'" class="trigger" :type="collapsed ? 'menu-fold' : 'menu-unfold'" @click="toggle"/>
-          <a-icon v-else class="trigger" :type="collapsed ? 'menu-unfold' : 'menu-fold'" @click="toggle"/>
-          <user-menu></user-menu>
+          <MenuFoldOutlined v-if="device==='mobile' && collapsed" class="trigger" @click="toggle"/>
+          <MenuUnfoldOutlined v-else-if="device==='mobile'" class="trigger" @click="toggle"/>
+          <MenuUnfoldOutlined v-else-if="collapsed" class="trigger" @click="toggle"/>
+          <MenuFoldOutlined v-else class="trigger" @click="toggle"/>
+          <UserMenu />
         </div>
         <div v-else :class="['top-nav-header-index', theme]">
           <div class="header-index-wide">
             <div class="header-index-left">
-              <logo class="top-nav-header" :show-title="device !== 'mobile'"/>
-              <s-menu v-if="device !== 'mobile'" mode="horizontal" :menu="menus" :theme="theme" />
-              <a-icon v-else class="trigger" :type="collapsed ? 'menu-fold' : 'menu-unfold'" @click="toggle" />
+              <Logo class="top-nav-header" :show-title="device !== 'mobile'"/>
+              <SMenu v-if="device !== 'mobile'" mode="horizontal" :menu="menus" :theme="theme" />
+              <MenuFoldOutlined v-else-if="collapsed" class="trigger" @click="toggle"/>
+              <MenuUnfoldOutlined v-else class="trigger" @click="toggle"/>
             </div>
-            <user-menu class="header-index-right"></user-menu>
+            <UserMenu class="header-index-right" />
           </div>
         </div>
       </a-layout-header>
@@ -25,84 +28,83 @@
   </transition>
 </template>
 
-<script>
-import UserMenu from '../tools/UserMenu'
-import SMenu from '../Menu/'
-import Logo from '../tools/Logo'
-import { mixin } from '@/utils/mixin'
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons-vue'
+import UserMenu from '../tools/UserMenu.vue'
+import SMenu from '../Menu/index.js'
+import Logo from '../tools/Logo.vue'
+import { useAppSettings } from '@/utils/mixin.js'
 
-export default {
-  name: 'GlobalHeader',
-  components: {
-    UserMenu,
-    SMenu,
-    Logo
+const props = defineProps({
+  mode: {
+    type: String,
+    default: 'sidemenu'
   },
-  mixins: [mixin],
-  props: {
-    mode: {
-      type: String,
-      // sidemenu, topmenu
-      default: 'sidemenu'
-    },
-    menus: {
-      type: Array,
-      required: true
-    },
-    theme: {
-      type: String,
-      required: false,
-      default: 'dark'
-    },
-    collapsed: {
-      type: Boolean,
-      required: false,
-      default: false
-    },
-    device: {
-      type: String,
-      required: false,
-      default: 'desktop'
-    }
+  menus: {
+    type: Array,
+    required: true
   },
-  data () {
-    return {
-      visible: true,
-      oldScrollTop: 0
-    }
+  theme: {
+    type: String,
+    default: 'dark'
   },
-  mounted () {
-    document.addEventListener('scroll', this.handleScroll, { passive: true })
+  collapsed: {
+    type: Boolean,
+    default: false
   },
-  methods: {
-    handleScroll () {
-      if (!this.autoHideHeader) {
-        return
-      }
-
-      const scrollTop = document.body.scrollTop + document.documentElement.scrollTop
-      if (!this.ticking) {
-        this.ticking = true
-        requestAnimationFrame(() => {
-          if (this.oldScrollTop > scrollTop) {
-            this.visible = true
-          } else if (scrollTop > 300 && this.visible) {
-            this.visible = false
-          } else if (scrollTop < 300 && !this.visible) {
-            this.visible = true
-          }
-          this.oldScrollTop = scrollTop
-          this.ticking = false
-        })
-      }
-    },
-    toggle () {
-      this.$emit('toggle')
-    }
-  },
-  beforeDestroy () {
-    document.body.removeEventListener('scroll', this.handleScroll, true)
+  device: {
+    type: String,
+    default: 'desktop'
   }
+})
+
+const emit = defineEmits(['toggle'])
+
+const { fixedHeader, autoHideHeader, sidebarOpened } = useAppSettings()
+
+const visible = ref(true)
+const oldScrollTop = ref(0)
+let ticking = false
+
+const handleScroll = () => {
+  if (!autoHideHeader.value) {
+    return
+  }
+
+  const scrollTop = document.body.scrollTop + document.documentElement.scrollTop
+  if (!ticking) {
+    ticking = true
+    requestAnimationFrame(() => {
+      if (oldScrollTop.value > scrollTop) {
+        visible.value = true
+      } else if (scrollTop > 300 && visible.value) {
+        visible.value = false
+      } else if (scrollTop < 300 && !visible.value) {
+        visible.value = true
+      }
+      oldScrollTop.value = scrollTop
+      ticking = false
+    })
+  }
+}
+
+const toggle = () => {
+  emit('toggle')
+}
+
+onMounted(() => {
+  document.addEventListener('scroll', handleScroll, { passive: true })
+})
+
+onBeforeUnmount(() => {
+  document.body.removeEventListener('scroll', handleScroll, true)
+})
+</script>
+
+<script>
+export default {
+  name: 'GlobalHeader'
 }
 </script>
 

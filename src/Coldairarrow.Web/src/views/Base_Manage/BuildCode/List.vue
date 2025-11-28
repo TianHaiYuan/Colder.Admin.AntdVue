@@ -1,23 +1,12 @@
 <template>
   <a-card :bordered="false">
-    <div class="table-operator">
-      <a-button type="primary" icon="redo" @click="init()">刷新</a-button>
-      <a-button
-        type="primary"
-        icon="plus"
-        @click="openForm(selectedRowKeys)"
-        :disabled="!hasSelected()"
-        :loading="loading"
-      >生成代码</a-button>
-    </div>
-
     <div class="table-page-search-wrapper">
       <a-form layout="inline">
-        <a-row :gutter="48">
-          <a-col :md="6" :sm="24">
+        <a-row :gutter="16" style="width: 100%">
+          <a-col :md="8" :sm="24">
             <a-form-item label="选择数据库">
-              <a-select v-model="linkId" @change="onLinkChange()">
-                <a-select-option v-for="item in dbs" :key="item.Id">{{ item.LinkName }}</a-select-option>
+              <a-select v-model:value="linkId" @change="onLinkChange" style="width: 200px">
+                <a-select-option v-for="item in dbs" :key="item.Id" :value="item.Id">{{ item.LinkName }}</a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
@@ -25,24 +14,52 @@
       </a-form>
     </div>
 
+    <div class="table-operator">
+      <a-button type="primary" @click="init()">
+        <template #icon><RedoOutlined /></template>
+        刷新
+      </a-button>
+      <a-button
+        type="primary"
+        @click="openForm()"
+        :disabled="!hasSelected"
+        :loading="loading"
+      >
+        <template #icon><PlusOutlined /></template>
+        生成代码
+      </a-button>
+    </div>
+
     <a-table
-      ref="table"
+      ref="tableRef"
       :columns="columns"
-      :rowKey="row => row.TableName"
-      :dataSource="data"
+      :row-key="row => row.TableName"
+      :data-source="data"
       :pagination="false"
       :loading="loading"
-      :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
+      :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
       :bordered="true"
       size="small"
-    ></a-table>
+    />
 
-    <edit-form ref="editForm"></edit-form>
+    <EditForm ref="editFormRef" />
   </a-card>
 </template>
 
-<script>
-import EditForm from './EditForm'
+<script setup>
+import { ref, computed, onMounted, getCurrentInstance } from 'vue'
+import { RedoOutlined, PlusOutlined } from '@ant-design/icons-vue'
+import EditForm from './EditForm.vue'
+
+const { proxy } = getCurrentInstance()
+
+const tableRef = ref(null)
+const editFormRef = ref(null)
+const data = ref([])
+const loading = ref(false)
+const selectedRowKeys = ref([])
+const dbs = ref([])
+const linkId = ref('')
 
 const columns = [
   { title: '表名', dataIndex: 'TableName', width: '20%' },
@@ -50,65 +67,50 @@ const columns = [
   { title: '', dataIndex: 'action' }
 ]
 
-export default {
-  components: {
-    EditForm
-  },
-  mounted() {
-    this.init()
-  },
-  data() {
-    return {
-      data: [],
-      filters: {},
-      sorter: { field: 'Id', order: 'asc' },
-      loading: false,
-      columns,
-      queryParam: {},
-      visible: false,
-      selectedRowKeys: [],
-      dbs: [],
-      linkId: ''
-    }
-  },
-  methods: {
-    init() {
-      this.$http
-        .post('/Base_Manage/BuildCode/GetAllDbLink', {})
-        .then(resJson => {
-          this.dbs = resJson.Data
-          if (this.dbs && this.dbs.length > 0) {
-            this.linkId = this.dbs[0].Id
-          }
-        })
-        .then(() => {
-          this.getDataList()
-        })
-    },
-    getDataList() {
-      this.selectedRowKeys = []
-      this.loading = true
-      this.$http
-        .post('/Base_Manage/BuildCode/GetDbTableList', {
-          linkId: this.linkId
-        })
-        .then(resJson => {
-          this.loading = false
-          this.data = resJson.Data
-        })
-    },
-    onLinkChange(value) {
-      this.getDataList()
-    },
-    onSelectChange(selectedRowKeys) {
-      this.selectedRowKeys = selectedRowKeys
-    },
-    hasSelected() {
-      return this.selectedRowKeys.length > 0
-    },
-    openForm() {
-      this.$refs.editForm.openForm(this.selectedRowKeys, this.linkId)
-    }
+const hasSelected = computed(() => selectedRowKeys.value.length > 0)
+
+const init = async () => {
+  const resJson = await proxy.$http.post('/Base_Manage/BuildCode/GetAllDbLink', {})
+  dbs.value = resJson.Data
+  if (dbs.value && dbs.value.length > 0) {
+    linkId.value = dbs.value[0].Id
   }
+  await getDataList()
+}
+
+const getDataList = async () => {
+  selectedRowKeys.value = []
+  loading.value = true
+
+  try {
+    const resJson = await proxy.$http.post('/Base_Manage/BuildCode/GetDbTableList', {
+      linkId: linkId.value
+    })
+    data.value = resJson.Data
+  } finally {
+    loading.value = false
+  }
+}
+
+const onLinkChange = () => {
+  getDataList()
+}
+
+const onSelectChange = (keys) => {
+  selectedRowKeys.value = keys
+}
+
+const openForm = () => {
+  editFormRef.value?.openForm(selectedRowKeys.value, linkId.value)
+}
+
+onMounted(() => {
+  init()
+})
+</script>
+
+<script>
+export default {
+  name: 'BuildCodeList'
 }
 </script>

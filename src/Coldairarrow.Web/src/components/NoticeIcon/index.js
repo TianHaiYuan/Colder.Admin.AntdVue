@@ -1,2 +1,2 @@
-import NoticeIcon from './NoticeIcon'
+import NoticeIcon from './NoticeIcon.vue'
 export default NoticeIcon

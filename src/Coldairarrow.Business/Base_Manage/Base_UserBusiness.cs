@@ -21,9 +21,10 @@ namespace Coldairarrow.Business.Base_Manage
         public Base_UserBusiness(
             IDbAccessor db,
             IBase_UserCache userCache,
-            IMapper mapper
+            IMapper mapper,
+            IOperator @operator = null
             )
-            : base(db)
+            : base(db, @operator)
         {
             _userCache = userCache;
             _mapper = mapper;

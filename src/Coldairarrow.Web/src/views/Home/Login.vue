@@ -1,147 +1,120 @@
 <template>
   <div class="main">
     <a-spin :spinning="loading">
-      <a-form id="formLogin" class="user-layout-login" ref="formLogin" :form="form" @submit="handleSubmit">
+      <a-form
+        id="formLogin"
+        class="user-layout-login"
+        ref="formRef"
+        :model="formState"
+        @finish="handleSubmit"
+      >
         <a-tabs
           :activeKey="customActiveKey"
           :tabBarStyle="{ textAlign: 'center', borderBottom: 'unset' }"
           @change="handleTabClick"
         >
           <a-tab-pane key="tab1" tab="账号密码登录">
-            <a-form-item>
+            <a-form-item name="userName" :rules="[{ required: true, message: '请输入用户名' }]">
               <a-input
                 size="large"
-                type="text"
+                v-model:value="formState.userName"
                 placeholder="请输入用户名"
-                v-decorator="['userName', { rules: [{ required: true, message: '请输入用户名' }] }]"
               >
-                <a-icon slot="prefix" type="user" :style="{ color: 'rgba(0,0,0,.25)' }" />
+                <template #prefix>
+                  <UserOutlined :style="{ color: 'rgba(0,0,0,.25)' }" />
+                </template>
               </a-input>
             </a-form-item>
 
-            <a-form-item>
-              <a-input
+            <a-form-item name="password" :rules="[{ required: true, message: '请输入密码' }]">
+              <a-input-password
                 size="large"
-                type="password"
-                autocomplete="false"
+                v-model:value="formState.password"
                 placeholder="请输入密码"
-                v-decorator="['password', { rules: [{ required: true, message: '请输入密码' }] }]"
               >
-                <a-icon slot="prefix" type="lock" :style="{ color: 'rgba(0,0,0,.25)' }" />
-              </a-input>
+                <template #prefix>
+                  <LockOutlined :style="{ color: 'rgba(0,0,0,.25)' }" />
+                </template>
+              </a-input-password>
             </a-form-item>
-            <a-form-item>
-              <a-checkbox v-decorator="['savePwd', { valuePropName: 'checked' }]">记住密码</a-checkbox>
+            <a-form-item name="savePwd">
+              <a-checkbox v-model:checked="formState.savePwd">记住密码</a-checkbox>
             </a-form-item>
           </a-tab-pane>
-          <!-- <a-tab-pane key="tab2" tab="手机号登录">
-          <a-form-item>
-            <a-input
-              size="large"
-              type="text"
-              placeholder="手机号"
-              v-decorator="[
-                'mobile',
-                {
-                  rules: [{ required: true, pattern: /^1[34578]\d{9}$/, message: '请输入正确的手机号' }],
-                  validateTrigger: 'change'
-                }
-              ]"
-            >
-              <a-icon slot="prefix" type="mobile" :style="{ color: 'rgba(0,0,0,.25)' }" />
-            </a-input>
-          </a-form-item>
-
-          <a-row :gutter="16">
-            <a-col class="gutter-row" :span="16">
-              <a-form-item>
-                <a-input
-                  size="large"
-                  type="text"
-                  placeholder="验证码"
-                  v-decorator="[
-                    'captcha',
-                    { rules: [{ required: true, message: '请输入验证码' }], validateTrigger: 'blur' }
-                  ]"
-                >
-                  <a-icon slot="prefix" type="mail" :style="{ color: 'rgba(0,0,0,.25)' }" />
-                </a-input>
-              </a-form-item>
-            </a-col>
-            <a-col class="gutter-row" :span="8">
-              <a-button
-                class="getCaptcha"
-                tabindex="-1"
-                :disabled="state.smsSendBtn"
-                @click.stop.prevent="getCaptcha"
-                v-text="(!state.smsSendBtn && '获取验证码') || state.time + ' s'"
-              ></a-button>
-            </a-col>
-          </a-row>
-        </a-tab-pane> -->
         </a-tabs>
 
         <a-form-item style="margin-top:24px">
-          <a-button size="large" type="primary" htmlType="submit" class="login-button">确定</a-button>
+          <a-button size="large" type="primary" html-type="submit" class="login-button">确定</a-button>
         </a-form-item>
       </a-form>
     </a-spin>
   </div>
 </template>
 
-<script>
-import TokenCache from '@/utils/cache/TokenCache'
+<script setup>
+import { ref, reactive, onMounted, getCurrentInstance } from 'vue'
+import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
+import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
+import TokenCache from '@/utils/cache/TokenCache.js'
 
-export default {
-  data() {
-    return {
-      loading: false,
-      customActiveKey: 'tab1',
-      form: this.$form.createForm(this)
-    }
-  },
-  mounted() {
-    var userName = localStorage.getItem('userName')
-    var password = localStorage.getItem('password')
-    if (userName && password) {
-      this.form.setFieldsValue({ userName, password, savePwd: true })
-    }
-  },
-  methods: {
-    handleTabClick(key) {
-      this.customActiveKey = key
-      // this.form.resetFields()
-    },
-    handleSubmit(e) {
-      e.preventDefault()
+const { proxy } = getCurrentInstance()
+const router = useRouter()
 
-      this.form.validateFields((errors, values) => {
-        //校验成功
-        if (!errors) {
-          var values = this.form.getFieldsValue()
-          this.loading = true
-          this.$http.post('/Base_Manage/Home/SubmitLogin', values).then(resJson => {
-            this.loading = false
+const formRef = ref(null)
+const loading = ref(false)
+const customActiveKey = ref('tab1')
 
-            if (resJson.Success) {
-              TokenCache.setToken(resJson.Data)
-              //保存密码
-              if (values['savePwd']) {
-                localStorage.setItem('userName', values['userName'])
-                localStorage.setItem('password', values['password'])
-              } else {
-                localStorage.removeItem('userName')
-                localStorage.removeItem('password')
-              }
-              this.$router.push({ path: '/' })
-            } else {
-              this.$message.error(resJson.Msg)
-            }
-          })
-        }
-      })
-    }
+const formState = reactive({
+  userName: '',
+  password: '',
+  savePwd: false
+})
+
+onMounted(() => {
+  const userName = localStorage.getItem('userName')
+  const password = localStorage.getItem('password')
+  if (userName && password) {
+    formState.userName = userName
+    formState.password = password
+    formState.savePwd = true
   }
+})
+
+const handleTabClick = (key) => {
+  customActiveKey.value = key
+}
+
+const handleSubmit = async () => {
+  loading.value = true
+  try {
+    const resJson = await proxy.$http.post('/Base_Manage/Home/SubmitLogin', formState)
+    loading.value = false
+
+    if (resJson.Success) {
+      TokenCache.setToken(resJson.Data)
+      // 保存密码
+      if (formState.savePwd) {
+        localStorage.setItem('userName', formState.userName)
+        localStorage.setItem('password', formState.password)
+      } else {
+        localStorage.removeItem('userName')
+        localStorage.removeItem('password')
+      }
+      router.push({ path: '/' })
+    } else {
+      message.error(resJson.Msg)
+    }
+  } catch (error) {
+    loading.value = false
+    message.error('登录失败')
+  }
+}
+</script>
+
+<script>
+export default {
+  name: 'Login'
 }
 </script>
 

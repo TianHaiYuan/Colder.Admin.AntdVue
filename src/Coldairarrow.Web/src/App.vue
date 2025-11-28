@@ -6,24 +6,40 @@
   </a-config-provider>
 </template>
 
-<script>
+<script setup>
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
-import moment from 'moment'
-import 'moment/locale/zh-cn'
-moment.locale('zh-cn')
+import dayjs from 'dayjs'
+import 'dayjs/locale/zh-cn'
+dayjs.locale('zh-cn')
 
-import { AppDeviceEnquire } from '@/utils/mixin'
+import { onMounted, onUnmounted } from 'vue'
+import { useAppStore } from '@/store'
 
-export default {
-  mixins: [AppDeviceEnquire],
-  data() {
-    return {
-      zhCN
-    }
-  },
-  mounted() {}
-}
+const appStore = useAppStore()
+
+// 设备检测
+let enquireHandler = null
+
+onMounted(() => {
+  if (typeof window.enquire !== 'undefined') {
+    enquireHandler = window.enquire.register('only screen and (max-width: 767.99px)', {
+      match: () => {
+        appStore.toggleDevice('mobile')
+      },
+      unmatch: () => {
+        appStore.toggleDevice('desktop')
+      }
+    })
+  }
+})
+
+onUnmounted(() => {
+  if (enquireHandler) {
+    window.enquire.unregister(enquireHandler)
+  }
+})
 </script>
+
 <style>
 #app {
   height: 100%;

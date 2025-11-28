@@ -1,119 +1,126 @@
 <template>
   <div class="clearfix">
     <a-upload
-      :action="`${$rootUrl}/Base_Manage/Upload/UploadFileByForm`"
+      :action="`${rootUrl}/Base_Manage/Upload/UploadFileByForm`"
       :headers="headers"
-      listType="picture"
-      :fileList="fileList"
+      list-type="picture"
+      :file-list="fileList"
       @preview="handlePreview"
       @change="handleChange"
     >
       <div v-if="fileList.length < maxCount">
-        <a-button> <a-icon type="plus" />选择 </a-button>
+        <a-button><PlusOutlined />选择</a-button>
       </div>
     </a-upload>
-    <a-modal :visible="previewVisible" :footer="null" @cancel="handleCancel">
+    <a-modal :open="previewVisible" :footer="null" @cancel="handleCancel">
       <img alt="example" style="width: 100%" :src="previewImage" />
     </a-modal>
   </div>
 </template>
-<script>
+
+<script setup>
+import { ref, watch, onMounted, inject } from 'vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
+import { v4 as uuidv4 } from 'uuid'
 import TypeHelper from '@/utils/helper/TypeHelper'
 import TokenCache from '@/utils/cache/TokenCache'
-const uuid = require('uuid')
 
-export default {
-  props: {
-    value: '', //字符串或字符串数组
-    maxCount: {
-      type: Number,
-      default: 1,
-    },
-  },
-  mounted() {
-    if (this.maxCount == 1) {
-      this.value = this.value || ''
+const props = defineProps({
+  value: { default: '' }, // 字符串或字符串数组
+  maxCount: {
+    type: Number,
+    default: 1
+  }
+})
+
+const emit = defineEmits(['update:value'])
+
+const rootUrl = inject('rootUrl', '')
+const previewVisible = ref(false)
+const previewImage = ref('')
+const fileList = ref([])
+const headers = ref({ Authorization: 'Bearer ' + TokenCache.getToken() })
+let internalValue = null
+
+const checkType = (val) => {
+  if (props.maxCount === 1 && TypeHelper.isArray(val)) {
+    throw new Error('maxCount=1时model不能为Array')
+  }
+  if (props.maxCount > 1 && !TypeHelper.isArray(val)) {
+    throw new Error('maxCount>1时model必须为Array<String>')
+  }
+}
+
+const getFileName = (url) => {
+  const reg = /^.*\/(.*?)$/
+  const match = url.match(reg)
+  if (match) {
+    return match[1]
+  } else {
+    return ''
+  }
+}
+
+const refresh = (val) => {
+  if (props.maxCount < 1) {
+    throw new Error('maxCount必须>=1')
+  }
+  if (val) {
+    let urls = []
+    if (TypeHelper.isString(val)) {
+      urls.push(val)
+    } else if (TypeHelper.isArray(val)) {
+      urls.push(...val)
     } else {
-      this.value = this.value || []
+      throw new Error('value必须为字符串或数组')
     }
-    this.checkType(this.value)
+    fileList.value = urls.map((x) => {
+      return { name: getFileName(x), uid: uuidv4(), status: 'done', url: x }
+    })
+  } else {
+    fileList.value = []
+  }
+}
 
-    this.refresh()
-  },
-  data() {
-    return {
-      previewVisible: false,
-      previewImage: '',
-      fileList: [],
-      obj: {},
-      headers: { Authorization: 'Bearer ' + TokenCache.getToken() },
-    }
-  },
-  watch: {
-    value(val) {
-      this.checkType(val)
+const handleCancel = () => {
+  previewVisible.value = false
+}
 
-      this.value = val
-      this.refresh()
-    },
-  },
-  methods: {
-    checkType(val) {
-      if (this.maxCount == 1 && TypeHelper.isArray(val)) {
-        throw 'maxCount=1时model不能为Array'
-      }
-      if (this.maxCount > 1 && !TypeHelper.isArray(val)) {
-        throw 'maxCount>1时model必须为Array<String>'
-      }
-    },
-    refresh() {
-      if (this.maxCount < 1) {
-        throw 'maxCount必须>=1'
-      }
-      if (this.value) {
-        let urls = []
+const handlePreview = (file) => {
+  const url = file.url || file.response.url
+  window.open(url, 'tab')
+}
 
-        if (TypeHelper.isString(this.value)) {
-          urls.push(this.value)
-        } else if (TypeHelper.isArray(this.value)) {
-          urls.push(...this.value)
-        } else {
-          throw 'value必须为字符串或数组'
-        }
+const handleChange = ({ file, fileList: newFileList }) => {
+  fileList.value = newFileList
+  if (file.status === 'done' || file.status === 'removed') {
+    const urls = fileList.value.filter((x) => x.status === 'done').map((x) => x.url || x.response.url)
+    const newValue = props.maxCount === 1 ? urls[0] : urls
+    internalValue = newValue
+    emit('update:value', newValue)
+  }
+}
 
-        this.fileList = urls.map((x) => {
-          return { name: this.getFileName(x), uid: uuid.v4(), status: 'done', url: x }
-        })
-      }
-    },
-    handleCancel() {
-      this.previewVisible = false
-    },
-    handlePreview(file) {
-      var url = file.url || file.response.url
+watch(() => props.value, (val) => {
+  if (val === internalValue) return
+  checkType(val)
+  refresh(val)
+})
 
-      window.open(url, 'tab')
-    },
-    handleChange({ file, fileList }) {
-      this.fileList = fileList
+onMounted(() => {
+  let val = props.value
+  if (props.maxCount === 1) {
+    val = val || ''
+  } else {
+    val = val || []
+  }
+  checkType(val)
+  refresh(val)
+})
+</script>
 
-      if (file.status == 'done' || file.status == 'removed') {
-        var urls = this.fileList.filter((x) => x.status == 'done').map((x) => x.url || x.response.url)
-        var newValue = this.maxCount == 1 ? urls[0] : urls
-        this.internelValue = newValue
-        //双向绑定
-        this.$emit('input', newValue)
-      }
-    },
-    getFileName(url) {
-      let reg = /^.*\/(.*?)$/
-      let match = reg.test(url)
-      if (match) {
-        return RegExp.$1
-      } else {
-        return ''
-      }
-    },
-  },
+<script>
+export default {
+  name: 'CUploadFile'
 }
 </script>

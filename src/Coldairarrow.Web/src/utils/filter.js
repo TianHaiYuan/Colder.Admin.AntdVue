@@ -1,20 +1,19 @@
-import Vue from 'vue'
-import moment from 'moment'
-import 'moment/locale/zh-cn'
-moment.locale('zh-cn')
+import dayjs from 'dayjs'
+import 'dayjs/locale/zh-cn'
+dayjs.locale('zh-cn')
 
-Vue.filter('NumberFormat', function (value) {
+// Vue 3 中过滤器被移除，改用函数方式
+export function NumberFormat(value) {
   if (!value) {
     return '0'
   }
-  const intPartFormat = value.toString().replace(/(\d)(?=(?:\d{3})+$)/g, '$1,') // 将整数部分逢三一断
-  return intPartFormat
-})
+  return value.toString().replace(/(\d)(?=(?:\d{3})+$)/g, '$1,')
+}
 
-Vue.filter('dayjs', function (dataStr, pattern = 'YYYY-MM-DD HH:mm:ss') {
-  return moment(dataStr).format(pattern)
-})
+export function formatDate(dataStr, pattern = 'YYYY-MM-DD HH:mm:ss') {
+  return dayjs(dataStr).format(pattern)
+}
 
-Vue.filter('moment', function (dataStr, pattern = 'YYYY-MM-DD HH:mm:ss') {
-  return moment(dataStr).format(pattern)
-})
+// 别名
+export const formatDayjs = formatDate
+export const formatMoment = formatDate

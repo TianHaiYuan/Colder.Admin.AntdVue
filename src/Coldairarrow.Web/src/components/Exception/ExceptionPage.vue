@@ -13,31 +13,39 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { useRouter } from 'vue-router'
 import types from './type'
 
-export default {
-  name: 'Exception',
-  props: {
-    type: {
-      type: String,
-      default: '404'
-    }
-  },
-  data() {
-    return {
-      config: types
-    }
-  },
-  methods: {
-    handleToHome() {
-      this.$router.push({ path: '/' })
-    }
+const props = defineProps({
+  type: {
+    type: String,
+    default: '404'
   }
+})
+
+const router = useRouter()
+const config = types
+
+const handleToHome = () => {
+  router.push({ path: '/' })
 }
 </script>
-<style lang="less">
-@import '~ant-design-vue/lib/style/index';
+
+<script>
+export default {
+  name: 'Exception'
+}
+</script>
+<style lang="less" scoped>
+@import "../index.less";
+
+// 响应式断点
+@screen-xs: 480px;
+@screen-sm: 576px;
+@screen-md: 768px;
+@screen-lg: 992px;
+@screen-xl: 1200px;
 
 .exception {
   display: flex;

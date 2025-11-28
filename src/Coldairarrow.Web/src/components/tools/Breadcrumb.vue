@@ -4,40 +4,40 @@
       <router-link
         v-if="item.name != name && index != 1"
         :to="{ path: item.path === '' ? '/' : item.path }"
-      >{{ item.meta.title }}</router-link>
-      <span v-else>{{ item.meta.title }}</span>
+      >{{ item.meta?.title }}</router-link>
+      <span v-else>{{ item.meta?.title }}</span>
     </a-breadcrumb-item>
   </a-breadcrumb>
 </template>
 
+<script setup>
+import { ref, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const name = ref('')
+const breadList = ref([])
+
+const getBreadcrumb = () => {
+  breadList.value = []
+  name.value = route.name
+  route.matched.forEach(item => {
+    breadList.value.push(item)
+  })
+}
+
+onMounted(() => {
+  getBreadcrumb()
+})
+
+watch(() => route.path, () => {
+  getBreadcrumb()
+})
+</script>
+
 <script>
 export default {
-  data () {
-    return {
-      name: '',
-      breadList: []
-    }
-  },
-  created () {
-    this.getBreadcrumb()
-  },
-  methods: {
-    getBreadcrumb () {
-      this.breadList = []
-      // this.breadList.push({name: 'index', path: '/dashboard/', meta: {title: '首页'}})
-
-      this.name = this.$route.name
-      this.$route.matched.forEach(item => {
-        // item.name !== 'index' && this.breadList.push(item)
-        this.breadList.push(item)
-      })
-    }
-  },
-  watch: {
-    $route () {
-      this.getBreadcrumb()
-    }
-  }
+  name: 'Breadcrumb'
 }
 </script>
 

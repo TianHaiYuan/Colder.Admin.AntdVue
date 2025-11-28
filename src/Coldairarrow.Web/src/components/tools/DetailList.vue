@@ -1,5 +1,28 @@
+<template>
+  <a-descriptions :title="title" :column="col" :bordered="bordered">
+    <slot></slot>
+  </a-descriptions>
+</template>
+
+<script setup>
+defineProps({
+  title: {
+    type: String,
+    default: ''
+  },
+  col: {
+    type: Number,
+    default: 3
+  },
+  bordered: {
+    type: Boolean,
+    default: false
+  }
+})
+</script>
+
 <script>
-/* WARNING: 兼容老引入，请勿继续使用 */
-import DescriptionList from '@/components/DescriptionList'
-export default DescriptionList
+export default {
+  name: 'DetailList'
+}
 </script>

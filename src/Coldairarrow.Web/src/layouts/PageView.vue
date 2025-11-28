@@ -39,85 +39,85 @@
     <div class="content">
       <div class="page-header-index-wide">
         <slot>
-          <!-- keep-alive  -->
-          <keep-alive v-if="multiTab">
-            <router-view ref="content" />
-          </keep-alive>
-          <router-view v-else ref="content" />
+          <router-view v-slot="{ Component }">
+            <keep-alive v-if="multiTab">
+              <component :is="Component" ref="content" />
+            </keep-alive>
+            <component v-else :is="Component" ref="content" />
+          </router-view>
         </slot>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-import { mapState } from 'vuex'
-import PageHeader from '@/components/PageHeader'
+<script setup>
+import { ref, onMounted, onUpdated } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAppStore } from '@/store'
+import PageHeader from '@/components/PageHeader/index.js'
 
-export default {
-  name: 'PageView',
-  components: {
-    PageHeader
+const props = defineProps({
+  avatar: {
+    type: String,
+    default: null
   },
-  props: {
-    avatar: {
-      type: String,
-      default: null
-    },
-    title: {
-      type: [String, Boolean],
-      default: true
-    },
-    logo: {
-      type: String,
-      default: null
-    },
-    directTabs: {
-      type: Object,
-      default: null
-    }
+  title: {
+    type: [String, Boolean],
+    default: true
   },
-  data () {
-    return {
-      pageTitle: null,
-      description: null,
-      linkList: [],
-      extraImage: '',
-      search: false,
-      tabs: {}
-    }
+  logo: {
+    type: String,
+    default: null
   },
-  computed: {
-    ...mapState({
-      multiTab: state => state.app.multiTab
-    })
-  },
-  mounted () {
-    this.tabs = this.directTabs
-    this.getPageMeta()
-  },
-  updated () {
-    this.getPageMeta()
-  },
-  methods: {
-    getPageMeta () {
-      // eslint-disable-next-line
-      this.pageTitle = (typeof(this.title) === 'string' || !this.title) ? this.title : this.$route.meta.title
+  directTabs: {
+    type: Object,
+    default: null
+  }
+})
 
-      const content = this.$refs.content
-      if (content) {
-        if (content.pageMeta) {
-          Object.assign(this, content.pageMeta)
-        } else {
-          this.description = content.description
-          this.linkList = content.linkList
-          this.extraImage = content.extraImage
-          this.search = content.search === true
-          this.tabs = content.tabs
-        }
-      }
+const route = useRoute()
+const appStore = useAppStore()
+
+const content = ref(null)
+const pageTitle = ref(null)
+const description = ref(null)
+const linkList = ref([])
+const extraImage = ref('')
+const search = ref(false)
+const tabs = ref({})
+
+const multiTab = ref(appStore.multiTab)
+
+const getPageMeta = () => {
+  pageTitle.value = (typeof props.title === 'string' || !props.title) ? props.title : route.meta?.title
+
+  if (content.value) {
+    if (content.value.pageMeta) {
+      Object.assign({ pageTitle, description, linkList, extraImage, search, tabs }, content.value.pageMeta)
+    } else {
+      description.value = content.value.description
+      linkList.value = content.value.linkList
+      extraImage.value = content.value.extraImage
+      search.value = content.value.search === true
+      tabs.value = content.value.tabs
     }
   }
+}
+
+onMounted(() => {
+  tabs.value = props.directTabs
+  getPageMeta()
+})
+
+onUpdated(() => {
+  getPageMeta()
+})
+</script>
+
+<script>
+export default {
+  name: 'PageView'
 }
 </script>
 

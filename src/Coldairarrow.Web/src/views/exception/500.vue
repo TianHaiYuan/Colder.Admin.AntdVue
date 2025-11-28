@@ -1,17 +1,13 @@
 <template>
-  <exception-page type="500" />
+  <ExceptionPage type="500" />
 </template>
 
-<script>
+<script setup>
 import { ExceptionPage } from '@/components'
-
-export default {
-  components: {
-    ExceptionPage
-  }
-}
 </script>
 
-<style scoped>
-
-</style>
+<script>
+export default {
+  name: 'Exception500'
+}
+</script>

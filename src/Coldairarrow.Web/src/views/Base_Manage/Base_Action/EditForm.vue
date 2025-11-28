@@ -2,128 +2,150 @@
   <a-modal
     title="编辑表单"
     width="40%"
-    :visible="visible"
+    :open="visible"
     :confirmLoading="confirmLoading"
     @ok="handleSubmit"
-    @cancel="()=>{this.visible=false}"
+    @cancel="visible = false"
   >
     <a-spin :spinning="confirmLoading">
-      <a-form-model ref="form" :model="entity" :rules="rules" v-bind="layout">
-        <a-form-model-item label="菜单名" prop="Name">
-          <a-input v-model="entity.Name" autocomplete="off" />
-        </a-form-model-item>
-        <a-form-model-item label="上级菜单" prop="ParentId">
+      <a-form ref="formRef" :model="entity" :rules="rules" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }">
+        <a-form-item label="菜单名" name="Name">
+          <a-input v-model:value="entity.Name" autocomplete="off" />
+        </a-form-item>
+        <a-form-item label="上级菜单" name="ParentId">
           <a-tree-select
-            v-model="entity.ParentId"
-            allowClear
-            :treeData="ParentIdTreeData"
+            v-model:value="entity.ParentId"
+            allow-clear
+            :tree-data="ParentIdTreeData"
             placeholder="请选择上级菜单"
-            treeDefaultExpandAll
-          ></a-tree-select>
-        </a-form-model-item>
-        <a-form-model-item label="类型" prop="Type">
-          <a-radio-group v-model="entity.Type">
+            tree-default-expand-all
+          />
+        </a-form-item>
+        <a-form-item label="类型" name="Type">
+          <a-radio-group v-model:value="entity.Type">
             <a-radio :value="0">菜单</a-radio>
             <a-radio :value="1">页面</a-radio>
           </a-radio-group>
-        </a-form-model-item>
-        <a-form-model-item label="路径" prop="Url">
-          <a-input v-model="entity.Url" autocomplete="off" />
-        </a-form-model-item>
-        <a-form-model-item label="是否需要权限" prop="NeedAction">
-          <a-radio-group v-model="entity.NeedAction">
+        </a-form-item>
+        <a-form-item label="路径" name="Url">
+          <a-input v-model:value="entity.Url" autocomplete="off" />
+        </a-form-item>
+        <a-form-item label="是否需要权限" name="NeedAction">
+          <a-radio-group v-model:value="entity.NeedAction">
             <a-radio :value="false">否</a-radio>
             <a-radio :value="true">是</a-radio>
           </a-radio-group>
-        </a-form-model-item>
-        <a-form-model-item label="图标" prop="Icon">
-          <a-input v-model="entity.Icon" autocomplete="off" />
-        </a-form-model-item>
-        <a-form-model-item label="排序" prop="Sort">
-          <a-input v-model="entity.Sort" type="number" autocomplete="off" />
-        </a-form-model-item>
+        </a-form-item>
+        <a-form-item label="图标" name="Icon">
+          <a-input v-model:value="entity.Icon" autocomplete="off" />
+        </a-form-item>
+        <a-form-item label="排序" name="Sort">
+          <a-input-number v-model:value="entity.Sort" autocomplete="off" />
+        </a-form-item>
         <a-card title="页面权限" :bordered="false">
-          <Permission-List ref="permissionList" :parentObj="this"></Permission-List>
+          <PermissionList ref="permissionListRef" />
         </a-card>
-      </a-form-model>
+      </a-form>
     </a-spin>
   </a-modal>
 </template>
 
-<script>
-import PermissionList from './PermissionList'
+<script setup>
+import { ref, reactive, nextTick, getCurrentInstance } from 'vue'
+import { message } from 'ant-design-vue'
+import PermissionList from './PermissionList.vue'
 
-export default {
-  props: {
-    afterSubmit: {
-      type: Function,
-      default: null
-    }
-  },
-  components: {
-    PermissionList
-  },
-  data() {
-    return {
-      layout: {
-        labelCol: { span: 5 },
-        wrapperCol: { span: 18 }
-      },
-      visible: false,
-      confirmLoading: false,
-      entity: {},
-      ParentIdTreeData: [],
-      rules: {
-        Name: [{ required: true, message: '必填' }],
-        Type: [{ required: true, message: '必填' }],
-        NeedAction: [{ required: true, message: '必填' }]
-      }
-    }
-  },
-  methods: {
-    init(id) {
-      this.visible = true
-      this.entity = {}
-      this.$nextTick(() => {
-        this.$refs.permissionList.init(id)
-        this.$refs['form'].clearValidate()
-      })
-
-      this.$http.post('/Base_Manage/Base_Action/GetMenuTreeList', {}).then(resJson => {
-        if (resJson.Success) {
-          this.ParentIdTreeData = resJson.Data
-        }
-      })
-    },
-    openForm(id) {
-      this.init(id)
-
-      if (id) {
-        this.$http.post('/Base_Manage/Base_Action/GetTheData', { id: id }).then(resJson => {
-          this.entity = resJson.Data
-        })
-      }
-    },
-    handleSubmit() {
-      this.$refs['form'].validate(valid => {
-        if (!valid) {
-          return
-        }
-        this.confirmLoading = true
-        this.entity.permissionList = this.$refs.permissionList.getPermissionList()
-        this.$http.post('/Base_Manage/Base_Action/SaveData', this.entity).then(resJson => {
-          this.confirmLoading = false
-
-          if (resJson.Success) {
-            this.$message.success('操作成功!')
-            this.afterSubmit()
-            this.visible = false
-          } else {
-            this.$message.error(resJson.Msg)
-          }
-        })
-      })
-    }
+const props = defineProps({
+  afterSubmit: {
+    type: Function,
+    default: null
   }
+})
+
+const { proxy } = getCurrentInstance()
+
+const formRef = ref(null)
+const permissionListRef = ref(null)
+const visible = ref(false)
+const confirmLoading = ref(false)
+const entity = reactive({
+  Name: '',
+  ParentId: null,
+  Type: null,
+  Url: '',
+  NeedAction: null,
+  Icon: '',
+  Sort: 0
+})
+const ParentIdTreeData = ref([])
+
+const rules = {
+  Name: [{ required: true, message: '必填' }],
+  Type: [{ required: true, message: '必填' }],
+  NeedAction: [{ required: true, message: '必填' }]
+}
+
+const init = async (id) => {
+  visible.value = true
+  Object.assign(entity, {
+    Name: '',
+    ParentId: null,
+    Type: null,
+    Url: '',
+    NeedAction: null,
+    Icon: '',
+    Sort: 0,
+    Id: null
+  })
+
+  await nextTick()
+  permissionListRef.value?.init(id)
+  formRef.value?.clearValidate()
+
+  const resJson = await proxy.$http.post('/Base_Manage/Base_Action/GetMenuTreeList', {})
+  if (resJson.Success) {
+    ParentIdTreeData.value = resJson.Data
+  }
+}
+
+const openForm = async (id) => {
+  await init(id)
+
+  if (id) {
+    const resJson = await proxy.$http.post('/Base_Manage/Base_Action/GetTheData', { id })
+    Object.assign(entity, resJson.Data)
+  }
+}
+
+const handleSubmit = async () => {
+  try {
+    await formRef.value.validate()
+
+    confirmLoading.value = true
+    entity.permissionList = permissionListRef.value?.getPermissionList() || []
+
+    const resJson = await proxy.$http.post('/Base_Manage/Base_Action/SaveData', entity)
+    confirmLoading.value = false
+
+    if (resJson.Success) {
+      message.success('操作成功!')
+      props.afterSubmit?.()
+      visible.value = false
+    } else {
+      message.error(resJson.Msg)
+    }
+  } catch (error) {
+    confirmLoading.value = false
+  }
+}
+
+defineExpose({
+  openForm
+})
+</script>
+
+<script>
+export default {
+  name: 'Base_ActionEditForm'
 }
 </script>

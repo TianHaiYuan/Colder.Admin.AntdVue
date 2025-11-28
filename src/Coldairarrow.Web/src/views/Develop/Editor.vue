@@ -2,27 +2,27 @@
   <a-card :bordered="false">
     <a-button @click="getContent()">获取内容</a-button>
     <a-button @click="setContent()">清空内容</a-button>
-    <wang-editor v-model="content"></wang-editor>
+    <WangEditor v-model:value="content" />
   </a-card>
 </template>
+
+<script setup>
+import { ref } from 'vue'
+import WangEditor from '@/components/WangEditor/WangEditor.vue'
+
+const content = ref('')
+
+const getContent = () => {
+  console.log(content.value)
+}
+
+const setContent = () => {
+  content.value = ''
+}
+</script>
+
 <script>
-import WangEditor from '@/components/WangEditor/WangEditor'
 export default {
-  components: {
-    WangEditor
-  },
-  data() {
-    return {
-      content: ''
-    }
-  },
-  methods: {
-    getContent() {
-      console.log(this.content)
-    },
-    setContent() {
-      this.content = ''
-    }
-  }
+  name: 'EditorView'
 }
 </script>

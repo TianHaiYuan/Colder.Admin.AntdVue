@@ -2,6 +2,7 @@
 using AutoMapper.QueryableExtensions;
 using Coldairarrow.Entity;
 using Coldairarrow.Entity.Base_Manage;
+using Coldairarrow.IBusiness;
 using Coldairarrow.Util;
 using EFCore.Sharding;
 using LinqKit;
@@ -16,8 +17,8 @@ namespace Coldairarrow.Business.Base_Manage
     public class Base_RoleBusiness : BaseBusiness<Base_Role>, IBase_RoleBusiness, ITransientDependency
     {
         readonly IMapper _mapper;
-        public Base_RoleBusiness(IDbAccessor db, IMapper mapper)
-            : base(db)
+        public Base_RoleBusiness(IDbAccessor db, IMapper mapper, IOperator @operator = null)
+            : base(db, @operator)
         {
             _mapper = mapper;
         }

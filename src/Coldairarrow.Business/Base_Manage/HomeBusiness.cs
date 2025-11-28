@@ -14,8 +14,8 @@ namespace Coldairarrow.Business.Base_Manage
     {
         readonly IMapper _mapper;
         private readonly IBase_UserCache _base_UserCache;
-        public HomeBusiness(IDbAccessor db, IMapper mapper, IBase_UserCache base_UserCache)
-            : base(db)
+        public HomeBusiness(IDbAccessor db, IMapper mapper, IBase_UserCache base_UserCache, IOperator @operator = null)
+            : base(db, @operator)
         {
             _mapper = mapper;
             _base_UserCache = base_UserCache;

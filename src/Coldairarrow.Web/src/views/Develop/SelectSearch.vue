@@ -1,7 +1,7 @@
 <template>
   <a-card :bordered="false">
-    <a-form :form="form">
-      <a-form-item label="远程搜索多选下拉" :labelCol="labelCol" :wrapperCol="wrapperCol">
+    <a-form :model="entity" :label-col="labelCol" :wrapper-col="wrapperCol">
+      <a-form-item label="远程搜索多选下拉">
         <!--
     value: null,
     url: {
@@ -29,28 +29,34 @@
       default: false
     }
         -->
-        <c-select
-          v-model="entity.UserList"
+        <CSelect
+          v-model:value="entity.UserList"
           multiple
           url="/Base_Manage/Base_User/GetOptionList"
-          searchMode="server"
-        ></c-select>
+          search-mode="server"
+        />
       </a-form-item>
-      <a-form-item label="本地搜索下拉" :labelCol="labelCol" :wrapperCol="wrapperCol">
-        <c-select v-model="entity.UserList1" multiple searchMode="local" :options="options"></c-select>
+      <a-form-item label="本地搜索下拉">
+        <CSelect v-model:value="entity.UserList1" multiple search-mode="local" :options="options" />
       </a-form-item>
-      <a-form-item label="设置值" :labelCol="labelCol" :wrapperCol="wrapperCol">
+      <a-form-item label="设置值">
         <a-button type="primary" @click="setValue()">设置数据</a-button>
       </a-form-item>
-      <a-form-item label="提交" :labelCol="labelCol" :wrapperCol="wrapperCol">
+      <a-form-item label="提交">
         <a-button type="primary" @click="handleSubmit()">提交数据</a-button>
       </a-form-item>
     </a-form>
   </a-card>
 </template>
 
-<script>
-import CSelect from '@/components/CSelect/CSelect'
+<script setup>
+import { reactive } from 'vue'
+import { message } from 'ant-design-vue'
+import CSelect from '@/components/CSelect/CSelect.vue'
+
+const labelCol = { xs: { span: 24 }, sm: { span: 7 } }
+const wrapperCol = { xs: { span: 24 }, sm: { span: 13 } }
+
 const options = [
   { value: '1181928860648738816', text: '小花' },
   { value: '1183363221872971776', text: 'aaa' },
@@ -60,37 +66,29 @@ const options = [
   { value: 'Admin', text: '超级管理员' }
 ]
 
-export default {
-  components: {
-    CSelect
-  },
-  data() {
-    return {
-      form: this.$form.createForm(this),
-      labelCol: { xs: { span: 24 }, sm: { span: 7 } },
-      wrapperCol: { xs: { span: 24 }, sm: { span: 13 } },
-      entity: {},
-      options: options
-    }
-  },
-  methods: {
-    setValue() {
-      this.entity = { UserList: ['Admin'] }
-    },
-    handleSubmit() {
-      console.log('当前值:', this.entity)
-      this.form.validateFields((errors, values) => {
-        //c-select组件若需要校验则必须手动校验
-        if (!this.entity.UserList || this.entity.UserList.length == 0) {
-          this.$message.error('请选择用户')
-          return
-        }
-        if (!errors) {
-          //校验成功
-          console.log('校验通过')
-        }
-      })
-    }
+const entity = reactive({
+  UserList: [],
+  UserList1: []
+})
+
+const setValue = () => {
+  entity.UserList = ['Admin']
+}
+
+const handleSubmit = () => {
+  console.log('当前值:', entity)
+  // c-select组件若需要校验则必须手动校验
+  if (!entity.UserList || entity.UserList.length === 0) {
+    message.error('请选择用户')
+    return
   }
+  // 校验成功
+  console.log('校验通过')
+}
+</script>
+
+<script>
+export default {
+  name: 'SelectSearchView'
 }
 </script>

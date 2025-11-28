@@ -1,4 +1,4 @@
-import { Axios } from "@/utils/plugin/axios-plugin"
+import { Axios } from "@/utils/plugin/axios-plugin.js"
 
 let permissions = []
 let inited = false
@@ -8,17 +8,24 @@ let OperatorCache = {
     inited() {
         return inited
     },
-    init(callBack) {
-        if (inited)
-            callBack()
-        else {
-            Axios.post('/Base_Manage/Home/GetOperatorInfo').then(resJson => {
-                this.info = resJson.Data.UserInfo
-                permissions = resJson.Data.Permissions
-                inited = true
-                callBack()
-            })
-        }
+    // 改为 Promise 方式以支持 async/await
+    init() {
+        return new Promise((resolve, reject) => {
+            if (inited) {
+                resolve()
+            } else {
+                Axios.post('/Base_Manage/Home/GetOperatorInfo').then(resJson => {
+                    if (resJson.Success) {
+                        this.info = resJson.Data.UserInfo
+                        permissions = resJson.Data.Permissions
+                        inited = true
+                        resolve()
+                    } else {
+                        reject(new Error(resJson.Msg))
+                    }
+                }).catch(reject)
+            }
+        })
     },
     hasPermission(thePermission) {
         return permissions.includes(thePermission)

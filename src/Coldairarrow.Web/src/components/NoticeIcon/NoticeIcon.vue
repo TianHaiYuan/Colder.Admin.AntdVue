@@ -1,32 +1,38 @@
 <template>
   <a-popover
-    v-model="visible"
+    v-model:open="visible"
     trigger="click"
     placement="bottomRight"
-    overlayClassName="header-notice-wrapper"
-    :getPopupContainer="() => $refs.noticeRef.parentElement"
-    :autoAdjustOverflow="true"
-    :arrowPointAtCenter="true"
-    :overlayStyle="{ width: '300px', top: '50px' }"
+    overlay-class-name="header-notice-wrapper"
+    :get-popup-container="() => noticeRef?.parentElement"
+    :auto-adjust-overflow="true"
+    :arrow-point-at-center="true"
+    :overlay-style="{ width: '300px', top: '50px' }"
   >
-    <template slot="content">
-      <a-spin :spinning="loadding">
+    <template #content>
+      <a-spin :spinning="loading">
         <a-tabs>
           <a-tab-pane tab="通知" key="1">
             <a-list>
               <a-list-item>
                 <a-list-item-meta title="你收到了 14 份新周报" description="一年前">
-                  <a-avatar style="background-color: white" slot="avatar" src="https://gw.alipayobjects.com/zos/rmsportal/ThXAXghbEsBCCSDihZxY.png"/>
+                  <template #avatar>
+                    <a-avatar style="background-color: white" src="https://gw.alipayobjects.com/zos/rmsportal/ThXAXghbEsBCCSDihZxY.png"/>
+                  </template>
                 </a-list-item-meta>
               </a-list-item>
               <a-list-item>
                 <a-list-item-meta title="你推荐的 曲妮妮 已通过第三轮面试" description="一年前">
-                  <a-avatar style="background-color: white" slot="avatar" src="https://gw.alipayobjects.com/zos/rmsportal/OKJXDXrmkNshAMvwtvhu.png"/>
+                  <template #avatar>
+                    <a-avatar style="background-color: white" src="https://gw.alipayobjects.com/zos/rmsportal/OKJXDXrmkNshAMvwtvhu.png"/>
+                  </template>
                 </a-list-item-meta>
               </a-list-item>
               <a-list-item>
                 <a-list-item-meta title="这种模板可以区分多种通知类型" description="一年前">
-                  <a-avatar style="background-color: white" slot="avatar" src="https://gw.alipayobjects.com/zos/rmsportal/kISTdvpyTAhtGxpovNWd.png"/>
+                  <template #avatar>
+                    <a-avatar style="background-color: white" src="https://gw.alipayobjects.com/zos/rmsportal/kISTdvpyTAhtGxpovNWd.png"/>
+                  </template>
                 </a-list-item-meta>
               </a-list-item>
             </a-list>
@@ -42,34 +48,36 @@
     </template>
     <span @click="fetchNotice" class="header-notice" ref="noticeRef">
       <a-badge count="12">
-        <a-icon style="font-size: 16px; padding: 4px" type="bell" />
+        <BellOutlined style="font-size: 16px; padding: 4px" />
       </a-badge>
     </span>
   </a-popover>
 </template>
 
+<script setup>
+import { ref } from 'vue'
+import { BellOutlined } from '@ant-design/icons-vue'
+
+const noticeRef = ref(null)
+const loading = ref(false)
+const visible = ref(false)
+
+const fetchNotice = () => {
+  if (!visible.value) {
+    loading.value = true
+    setTimeout(() => {
+      loading.value = false
+    }, 2000)
+  } else {
+    loading.value = false
+  }
+  visible.value = !visible.value
+}
+</script>
+
 <script>
 export default {
-  name: 'HeaderNotice',
-  data () {
-    return {
-      loadding: false,
-      visible: false
-    }
-  },
-  methods: {
-    fetchNotice () {
-      if (!this.visible) {
-        this.loadding = true
-        setTimeout(() => {
-          this.loadding = false
-        }, 2000)
-      } else {
-        this.loadding = false
-      }
-      this.visible = !this.visible
-    }
-  }
+  name: 'HeaderNotice'
 }
 </script>
 

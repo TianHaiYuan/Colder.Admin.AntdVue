@@ -1,2 +1,2 @@
-import GlobalHeader from './GlobalHeader'
+import GlobalHeader from './GlobalHeader.vue'
 export default GlobalHeader

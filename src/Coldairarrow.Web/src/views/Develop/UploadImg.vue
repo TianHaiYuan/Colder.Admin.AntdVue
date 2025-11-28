@@ -1,15 +1,15 @@
 <template>
   <a-card :bordered="false">
-    <a-form :form="form">
-      <a-form-item label="单张图片上传" :labelCol="labelCol" :wrapperCol="wrapperCol">
+    <a-form :model="entity" :label-col="labelCol" :wrapper-col="wrapperCol">
+      <a-form-item label="单张图片上传">
         <!--v-model为图片连接地址(可传单个或数组),maxCount为最大上传数:默认为1-->
-        <c-upload-img v-model="entity.Img" :maxCount="1"></c-upload-img>
+        <CUploadImg v-model:value="entity.Img" :max-count="1" />
       </a-form-item>
-      <a-form-item label="多张图片上传" :labelCol="labelCol" :wrapperCol="wrapperCol">
+      <a-form-item label="多张图片上传">
         <!--v-model为图片连接地址(可传单个或数组),maxCount为最大上传数:默认为1-->
-        <c-upload-img v-model="entity.Imgs" :maxCount="100"></c-upload-img>
+        <CUploadImg v-model:value="entity.Imgs" :max-count="100" />
       </a-form-item>
-      <a-form-item label="获取图片链接" :labelCol="labelCol" :wrapperCol="wrapperCol">
+      <a-form-item label="获取图片链接">
         <a-button @click="setImg()">设置图片链接</a-button>
         <a-button @click="getImgUrls()">获取图片链接</a-button>
       </a-form-item>
@@ -17,34 +17,31 @@
   </a-card>
 </template>
 
-<script>
-import CUploadImg from '@/components/CUploadImg/CUploadImg'
+<script setup>
+import { reactive } from 'vue'
+import CUploadImg from '@/components/CUploadImg/CUploadImg.vue'
+import logoImg from '@/assets/logo.png'
 
+const labelCol = { xs: { span: 24 }, sm: { span: 7 } }
+const wrapperCol = { xs: { span: 24 }, sm: { span: 13 } }
+
+const entity = reactive({
+  Img: logoImg,
+  Imgs: [logoImg]
+})
+
+const getImgUrls = () => {
+  console.log(entity)
+}
+
+const setImg = () => {
+  entity.Img = logoImg
+  entity.Imgs = [logoImg]
+}
+</script>
+
+<script>
 export default {
-  components: {
-    CUploadImg
-  },
-  data() {
-    return {
-      form: this.$form.createForm(this),
-      labelCol: { xs: { span: 24 }, sm: { span: 7 } },
-      wrapperCol: { xs: { span: 24 }, sm: { span: 13 } },
-      entity: {
-        Img: require('@/assets/logo.png'),
-        Imgs: [require('@/assets/logo.png')]
-      }
-    }
-  },
-  methods: {
-    getImgUrls() {
-      console.log(this.entity)
-    },
-    setImg() {
-      this.entity = {
-        Img: require('@/assets/logo.png'),
-        Imgs: [require('@/assets/logo.png')]
-      }
-    }
-  }
+  name: 'UploadImgView'
 }
 </script>

@@ -1,8 +1,9 @@
-import OperatorCache from "@/utils/cache/OperatorCache"
+import OperatorCache from "@/utils/cache/OperatorCache.js"
 
 export default {
-    install(Vue) {
-        Object.defineProperty(Vue.prototype, '$op', { value: OperatorCache })
-        Object.defineProperty(Vue.prototype, 'hasPerm', { value: OperatorCache.hasPermission })
+    install(app) {
+        // Vue 3 使用 globalProperties
+        app.config.globalProperties.$op = OperatorCache
+        app.config.globalProperties.$hasPerm = OperatorCache.hasPermission.bind(OperatorCache)
     }
 }
