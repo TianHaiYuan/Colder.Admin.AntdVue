@@ -83,14 +83,23 @@ const pagination = reactive({
 })
 
 const filters = ref({})
-const sorter = ref({ field: 'Id', order: 'asc' })
+const sorter = ref({})
 
 const columns = [
   { title: '应用Id', dataIndex: 'AppId', width: '20%' },
   { title: '密钥', dataIndex: 'AppSecret', width: '20%' },
-  { title: '应用名', dataIndex: 'AppName' },
+  { title: '应用名', dataIndex: 'AppName', width: '20%' },
+  { title: '创建时间', dataIndex: 'CreateTime', width: '15%', sorter: true },
   { title: '操作', dataIndex: 'action' }
 ]
+
+// 构建排序参数
+const buildSorts = (srt) => {
+  if (srt && srt.field) {
+    return [{ Field: srt.field, Type: srt.order === 'ascend' ? 'asc' : 'desc' }]
+  }
+  return null
+}
 
 const hasSelected = computed(() => selectedRowKeys.value.length > 0)
 
@@ -110,8 +119,7 @@ const getDataList = async () => {
     const resJson = await proxy.$http.post('/Base_Manage/Base_AppSecret/GetDataList', {
       PageIndex: pagination.current,
       PageRows: pagination.pageSize,
-      SortField: sorter.value.field || 'Id',
-      SortType: sorter.value.order === 'ascend' ? 'asc' : 'desc',
+      Sorts: buildSorts(sorter.value),
       ...filters.value,
       Search: queryParam
     })

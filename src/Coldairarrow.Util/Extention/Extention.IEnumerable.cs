@@ -9,6 +9,11 @@ namespace Coldairarrow.Util
 {
     public static partial class Extention
     {
+        public static bool IsNullOrEmpty<T>(this IEnumerable<T> iEnumberable)
+        {
+            return iEnumberable is null || !iEnumberable.Any();
+        }
+
         /// <summary>
         /// 复制序列中的数据
         /// </summary>
@@ -84,17 +89,17 @@ namespace Coldairarrow.Util
         /// <param name="iEnumberable">数据源</param>
         /// <param name="pageInput">分页参数</param>
         /// <returns></returns>
-        public static PageResult<T> GetPageResult<T>(this IEnumerable<T> iEnumberable, PageInput pageInput)
+        public static PageResult<T> GetPageResult<T>(this IEnumerable<T> iEnumberable, PageInput pageInput) where T : new()
         {
             int count = iEnumberable.Count();
 
             var list = iEnumberable.AsQueryable()
-                .OrderBy($@"{pageInput.SortField} {pageInput.SortType}")
+                .OrderBy(pageInput.Sorts)
                 .Skip((pageInput.PageIndex - 1) * pageInput.PageRows)
                 .Take(pageInput.PageRows)
                 .ToList();
 
-            return new PageResult<T> { Data = list, Total = count };
+            return new PageResult<T> { Data = list, TotalCount = count };
         }
 
         /// <summary>
@@ -107,7 +112,7 @@ namespace Coldairarrow.Util
         public static List<T> GetPageList<T>(this IEnumerable<T> iEnumberable, PageInput pageInput)
         {
             var list = iEnumberable.AsQueryable()
-                .OrderBy($@"{pageInput.SortField} {pageInput.SortType}")
+                .OrderBy(pageInput.Sorts)
                 .Skip((pageInput.PageIndex - 1) * pageInput.PageRows)
                 .Take(pageInput.PageRows)
                 .ToList();

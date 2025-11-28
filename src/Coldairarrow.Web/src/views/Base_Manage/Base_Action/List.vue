@@ -79,7 +79,15 @@ const pagination = reactive({
 })
 
 const filters = ref({})
-const sorter = ref({ field: 'Id', order: 'asc' })
+const sorter = ref({})
+
+// 构建排序参数
+const buildSorts = (srt) => {
+  if (srt && srt.field) {
+    return [{ Field: srt.field, Type: srt.order === 'ascend' ? 'asc' : 'desc' }]
+  }
+  return null
+}
 
 const columns = [
   { title: '菜单名', dataIndex: 'Text', width: '15%' },
@@ -120,8 +128,7 @@ const getDataList = async () => {
     const resJson = await proxy.$http.post('/Base_Manage/Base_Action/GetMenuTreeList', {
       PageIndex: pagination.current,
       PageRows: pagination.pageSize,
-      SortField: sorter.value.field || 'Id',
-      SortType: sorter.value.order === 'ascend' ? 'asc' : 'desc',
+      Sorts: buildSorts(sorter.value),
       ...filters.value
     })
 

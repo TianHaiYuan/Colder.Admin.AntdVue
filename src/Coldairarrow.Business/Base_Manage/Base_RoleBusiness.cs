@@ -1,26 +1,23 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using Coldairarrow.Entity;
+﻿using Coldairarrow.Entity;
 using Coldairarrow.Entity.Base_Manage;
 using Coldairarrow.IBusiness;
 using Coldairarrow.Util;
 using EFCore.Sharding;
 using LinqKit;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 
 namespace Coldairarrow.Business.Base_Manage
 {
     public class Base_RoleBusiness : BaseBusiness<Base_Role>, IBase_RoleBusiness, ITransientDependency
     {
-        readonly IMapper _mapper;
-        public Base_RoleBusiness(IDbAccessor db, IMapper mapper, IOperator @operator = null)
+        public Base_RoleBusiness(IDbAccessor db, IOperator @operator = null)
             : base(db, @operator)
         {
-            _mapper = mapper;
         }
 
         #region 外部接口
@@ -34,14 +31,13 @@ namespace Coldairarrow.Business.Base_Manage
             if (!search.roleName.IsNullOrEmpty())
                 where = where.And(x => x.RoleName.Contains(search.roleName));
 
-            var page = await GetIQueryable()
-                .Where(where)
-                .ProjectTo<Base_RoleInfoDTO>(_mapper.ConfigurationProvider)
-                .GetPageResultAsync(input);
+            // 查询原始实体并分页
+            var pageQuery = GetIQueryable().Where(where);
+            var pageResult = await pageQuery.ProjectToType<Base_RoleInfoDTO>().GetPageResultAsync(input);
 
-            await SetProperty(page.Data);
+            await SetProperty(pageResult.Data);
 
-            return page;
+            return pageResult;
 
             async Task SetProperty(List<Base_RoleInfoDTO> _list)
             {
@@ -70,7 +66,7 @@ namespace Coldairarrow.Business.Base_Manage
         [DataRepeatValidate(new string[] { "RoleName" }, new string[] { "角色名" })]
         public async Task AddDataAsync(Base_RoleInfoDTO input)
         {
-            await InsertAsync(_mapper.Map<Base_Role>(input));
+            await InsertAsync(input.Adapt<Base_Role>());
             await SetRoleActionAsync(input.Id, input.Actions);
         }
 
@@ -79,7 +75,7 @@ namespace Coldairarrow.Business.Base_Manage
         [Transactional]
         public async Task UpdateDataAsync(Base_RoleInfoDTO input)
         {
-            await UpdateAsync(_mapper.Map<Base_Role>(input));
+            await UpdateAsync(input.Adapt<Base_Role>());
             await SetRoleActionAsync(input.Id, input.Actions);
         }
 
@@ -103,6 +99,7 @@ namespace Coldairarrow.Business.Base_Manage
                     ActionId = x,
                     RoleId = roleId
                 }).ToList();
+            roleActions.ForEach(InitCreateAudit);
             await Db.DeleteAsync<Base_RoleAction>(x => x.RoleId == roleId);
             await Db.InsertAsync(roleActions);
         }

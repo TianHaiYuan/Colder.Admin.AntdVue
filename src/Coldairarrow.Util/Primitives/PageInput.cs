@@ -1,12 +1,13 @@
-﻿namespace Coldairarrow.Util
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace Coldairarrow.Util
 {
     /// <summary>
     /// 分页查询基类
     /// </summary>
     public class PageInput
     {
-        private string _sortType { get; set; } = "asc";
-
         /// <summary>
         /// 当前页码
         /// </summary>
@@ -18,13 +19,33 @@
         public int PageRows { get; set; } = int.MaxValue;
 
         /// <summary>
-        /// 排序列
+        /// 排序集合
         /// </summary>
-        public string SortField { get; set; } = "Id";
+        public ICollection<Sort> Sorts { get; set; }
 
         /// <summary>
-        /// 排序类型
+        /// 排序项
         /// </summary>
-        public string SortType { get => _sortType; set => _sortType = (value ?? string.Empty).ToLower().Contains("desc") ? "desc" : "asc"; }
+        public class Sort
+        {
+            /// <summary>
+            /// 排序列
+            /// </summary>
+            public string Field { get; set; } = "Id";
+
+            /// <summary>
+            /// 排序类型 (asc/desc)
+            /// </summary>
+            public string Type { get; set; } = "asc";
+
+
+            public Sort() { }
+
+            public Sort(string field, string type = "asc")
+            {
+                Field = field;
+                Type = type;
+            }
+        }
     }
 }

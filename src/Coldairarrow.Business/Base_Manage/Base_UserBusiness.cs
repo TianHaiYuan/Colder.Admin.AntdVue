@@ -1,11 +1,11 @@
-﻿using AutoMapper;
-using Coldairarrow.Business.Cache;
+﻿using Coldairarrow.Business.Cache;
 using Coldairarrow.Entity;
 using Coldairarrow.Entity.Base_Manage;
 using Coldairarrow.IBusiness;
 using Coldairarrow.Util;
 using EFCore.Sharding;
 using LinqKit;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -17,17 +17,14 @@ namespace Coldairarrow.Business.Base_Manage
 {
     public class Base_UserBusiness : BaseBusiness<Base_User>, IBase_UserBusiness, ITransientDependency
     {
-        readonly IMapper _mapper;
         public Base_UserBusiness(
             IDbAccessor db,
             IBase_UserCache userCache,
-            IMapper mapper,
             IOperator @operator = null
             )
             : base(db, @operator)
         {
             _userCache = userCache;
-            _mapper = mapper;
         }
         IBase_UserCache _userCache { get; }
         protected override string _textField => "RealName";
@@ -110,8 +107,9 @@ namespace Coldairarrow.Business.Base_Manage
         [Transactional]
         public async Task AddDataAsync(UserEditInputDTO input)
         {
-            await InsertAsync(_mapper.Map<Base_User>(input));
-            await SetUserRoleAsync(input.Id, input.RoleIdList);
+            var userEntity = input.Adapt<Base_User>();
+            await InsertAsync(userEntity);
+            await SetUserRoleAsync(userEntity.Id, input.RoleIdList);
         }
 
         [DataEditLog(UserLogType.系统用户管理, "RealName", "用户")]
@@ -124,7 +122,7 @@ namespace Coldairarrow.Business.Base_Manage
             if (input.Id == GlobalAssemblies.ADMINID && _operator?.UserId != input.Id)
                 throw new BusException("禁止更改超级管理员！");
 
-            await UpdateAsync(_mapper.Map<Base_User>(input));
+            await UpdateAsync(input.Adapt<Base_User>());
             await SetUserRoleAsync(input.Id, input.RoleIdList);
             await _userCache.UpdateCacheAsync(input.Id);
         }
@@ -153,6 +151,7 @@ namespace Coldairarrow.Business.Base_Manage
                 UserId = userId,
                 RoleId = x
             }).ToList();
+            userRoleList.ForEach(InitCreateAudit);
             await Db.DeleteAsync<Base_UserRole>(x => x.UserId == userId);
             await Db.InsertAsync(userRoleList);
         }

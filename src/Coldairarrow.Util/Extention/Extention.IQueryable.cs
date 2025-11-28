@@ -5,7 +5,9 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
+using static Coldairarrow.Util.PageInput;
 
 namespace Coldairarrow.Util
 {
@@ -97,58 +99,22 @@ namespace Coldairarrow.Util
         }
 
         /// <summary>
-        /// 获取分页数据(包括总数量)
+        /// 动态排序法（支持Sort集合）
         /// </summary>
-        /// <typeparam name="T">泛型</typeparam>
+        /// <typeparam name="T">实体类型</typeparam>
         /// <param name="source">数据源</param>
-        /// <param name="pageInput">分页参数</param>
+        /// <param name="sorts">排序集合</param>
         /// <returns></returns>
-        public static PageResult<T> GetPageResult<T>(this IQueryable<T> source, PageInput pageInput)
+        public static IOrderedQueryable<T> OrderBy<T>(this IQueryable<T> source, IEnumerable<Sort> sorts)
         {
-            int count = source.Count();
+            if (sorts == null || !sorts.Any())
+            {
+                throw new ArgumentException("排序参数sorts不能为空");
+            }
 
-            var list = source.OrderBy($@"{pageInput.SortField} {pageInput.SortType}")
-                .Skip((pageInput.PageIndex - 1) * pageInput.PageRows)
-                .Take(pageInput.PageRows)
-                .ToList();
-
-            return new PageResult<T> { Data = list, Total = count };
-        }
-
-        /// <summary>
-        /// 获取分页数据(包括总数量)
-        /// </summary>
-        /// <typeparam name="T">泛型</typeparam>
-        /// <param name="source">数据源</param>
-        /// <param name="pageInput">分页参数</param>
-        /// <returns></returns>
-        public static async Task<PageResult<T>> GetPageResultAsync<T>(this IQueryable<T> source, PageInput pageInput)
-        {
-            int count = await source.CountAsync();
-
-            var list = await source.OrderBy($@"{pageInput.SortField} {pageInput.SortType}")
-                .Skip((pageInput.PageIndex - 1) * pageInput.PageRows)
-                .Take(pageInput.PageRows)
-                .ToListAsync();
-
-            return new PageResult<T> { Data = list, Total = count };
-        }
-
-        /// <summary>
-        /// 获取分页数据(仅获取列表,不获取总数量)
-        /// </summary>
-        /// <typeparam name="T">泛型</typeparam>
-        /// <param name="source">数据源</param>
-        /// <param name="pageInput">分页参数</param>
-        /// <returns></returns>
-        public static List<T> GetPageList<T>(this IQueryable<T> source, PageInput pageInput)
-        {
-            var list = source.OrderBy($@"{pageInput.SortField} {pageInput.SortType}")
-                .Skip((pageInput.PageIndex - 1) * pageInput.PageRows)
-                .Take(pageInput.PageRows)
-                .ToList();
-
-            return list;
+            var sortList = sorts.ToList();
+            var orderByString = string.Join(", ", sortList.Select(s => $"{s.Field} {s.Type}"));
+            return source.OrderBy(orderByString);
         }
 
         /// <summary>
@@ -160,12 +126,82 @@ namespace Coldairarrow.Util
         /// <returns></returns>
         public static async Task<List<T>> GetPageListAsync<T>(this IQueryable<T> source, PageInput pageInput)
         {
-            var list = await source.OrderBy($@"{pageInput.SortField} {pageInput.SortType}")
+            var list = await source.OrderBy(pageInput.Sorts)
                 .Skip((pageInput.PageIndex - 1) * pageInput.PageRows)
                 .Take(pageInput.PageRows)
                 .ToListAsync();
 
             return list;
+        }
+
+        /// <summary>
+        /// 获取分页数据同步方法
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="entities"></param>
+        /// <param name="pageInput"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static PageResult<TEntity> GetPageResult<TEntity>(this IQueryable<TEntity> entities, PageInput pageInput) where TEntity : new()
+        {
+            if (pageInput.PageIndex <= 0)
+            {
+                throw new InvalidOperationException("pageIndex must be a positive integer greater than 0.");
+            }
+            int num = entities.Count();
+
+            if (!pageInput.Sorts.IsNullOrEmpty())
+            {
+                entities = entities.OrderBy(pageInput.Sorts);
+            }
+            List<TEntity> items = entities
+                .Skip((pageInput.PageIndex - 1) * pageInput.PageRows)
+                .Take(pageInput.PageRows)
+                .ToList();
+            int num2 = (int)Math.Ceiling(num / (double)pageInput.PageRows);
+            return new PageResult<TEntity>
+            {
+                Data = items,
+                TotalCount = num,
+                TotalPages = num2,
+                HasNextPages = (pageInput.PageIndex < num2),
+                HasPrevPages = (pageInput.PageIndex - 1 > 0)
+            };
+        }
+
+        /// <summary>
+        /// 获取分页数据异步方法
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="entities"></param>
+        /// <param name="pageInput"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static async Task<PageResult<TEntity>> GetPageResultAsync<TEntity>(this IQueryable<TEntity> entities, PageInput pageInput) where TEntity : new()
+        {
+            if (pageInput.PageIndex <= 0)
+            {
+                throw new InvalidOperationException("pageInput.PageIndex must be a positive integer greater than 0.");
+            }
+            int totalCount = await entities.CountAsync();
+
+            if (!pageInput.Sorts.IsNullOrEmpty())
+            {
+                entities = entities.OrderBy(pageInput.Sorts);
+            }
+            List<TEntity> items = await entities
+                .Skip((pageInput.PageIndex - 1) * pageInput.PageRows)
+                .Take(pageInput.PageRows)
+                .ToListAsync();
+            int num = (int)Math.Ceiling(totalCount / (double)pageInput.PageRows);
+            return new PageResult<TEntity>
+            {
+                Data = items,
+                TotalCount = totalCount,
+                TotalPages = num,
+                HasNextPages = (pageInput.PageIndex < num),
+                HasPrevPages = (pageInput.PageIndex - 1 > 0)
+            };
         }
     }
 }

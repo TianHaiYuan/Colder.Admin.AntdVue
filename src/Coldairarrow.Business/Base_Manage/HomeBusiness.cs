@@ -1,9 +1,9 @@
-﻿using AutoMapper;
-using Coldairarrow.Business.Cache;
+﻿using Coldairarrow.Business.Cache;
 using Coldairarrow.Entity.Base_Manage;
 using Coldairarrow.IBusiness;
 using Coldairarrow.Util;
 using EFCore.Sharding;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,12 +12,10 @@ namespace Coldairarrow.Business.Base_Manage
 {
     public class HomeBusiness : BaseBusiness<Base_User>, IHomeBusiness, ITransientDependency
     {
-        readonly IMapper _mapper;
         private readonly IBase_UserCache _base_UserCache;
-        public HomeBusiness(IDbAccessor db, IMapper mapper, IBase_UserCache base_UserCache, IOperator @operator = null)
+        public HomeBusiness(IDbAccessor db, IBase_UserCache base_UserCache, IOperator @operator = null)
             : base(db, @operator)
         {
-            _mapper = mapper;
             _base_UserCache = base_UserCache;
         }
 
@@ -41,7 +39,7 @@ namespace Coldairarrow.Business.Base_Manage
                 throw new BusException("原密码错误!");
 
             theUser.Password = input.newPwd.ToMD5String();
-            await UpdateAsync(_mapper.Map<Base_User>(theUser));
+            await UpdateAsync(theUser.Adapt<Base_User>());
 
             //更新缓存
             await _base_UserCache.UpdateCacheAsync(theUser.Id);

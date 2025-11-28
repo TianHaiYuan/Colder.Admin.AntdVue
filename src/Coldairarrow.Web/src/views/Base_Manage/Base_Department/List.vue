@@ -68,12 +68,20 @@ const pagination = reactive({
 })
 
 const filters = ref({})
-const sorter = ref({ field: 'Id', order: 'asc' })
+const sorter = ref({})
 
 const columns = [
   { title: '部门名', dataIndex: 'Text', width: '20%' },
   { title: '操作', dataIndex: 'action' }
 ]
+
+// 构建排序参数
+const buildSorts = (srt) => {
+  if (srt && srt.field) {
+    return [{ Field: srt.field, Type: srt.order === 'ascend' ? 'asc' : 'desc' }]
+  }
+  return null
+}
 
 const hasSelected = computed(() => selectedRowKeys.value.length > 0)
 
@@ -93,8 +101,7 @@ const getDataList = async () => {
     const resJson = await proxy.$http.post('/Base_Manage/Base_Department/GetTreeDataList', {
       PageIndex: pagination.current,
       PageRows: pagination.pageSize,
-      SortField: sorter.value.field || 'Id',
-      SortType: sorter.value.order,
+      Sorts: buildSorts(sorter.value),
       ...filters.value
     })
 

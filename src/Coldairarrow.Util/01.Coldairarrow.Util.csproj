@@ -13,10 +13,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="Castle.Core.AsyncInterceptor" Version="2.1.0" />
     <PackageReference Include="EFCore.Sharding.SqlServer" Version="8.0.3" />
     <PackageReference Include="IdHelper.Zookeeper" Version="1.5.1" />
+    <PackageReference Include="Mapster" Version="7.4.0" />
     <PackageReference Include="MySqlConnector" Version="2.3.7" />
     <PackageReference Include="Npgsql" Version="8.0.3" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.130" />

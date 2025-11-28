@@ -6,11 +6,17 @@ namespace Coldairarrow.Util
     /// 分页返回结果
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class PageResult<T> : AjaxResult<List<T>>
+    public class PageResult<T> : AjaxResult<List<T>> where T : new()
     {
         /// <summary>
         /// 总记录数
         /// </summary>
-        public int Total { get; set; }
+        public int TotalCount { get; set; }
+
+        public int TotalPages { get; set; }
+
+        public bool HasPrevPages { get; set; }
+
+        public bool HasNextPages { get; set; }
     }
 }

@@ -101,7 +101,8 @@ const handleSubmit = async () => {
         localStorage.removeItem('userName')
         localStorage.removeItem('password')
       }
-      router.push({ path: '/' })
+      // 跳转到首页，permission.js 会处理动态路由加载
+      router.push({ path: '/Home/Introduce' })
     } else {
       message.error(resJson.Msg)
     }

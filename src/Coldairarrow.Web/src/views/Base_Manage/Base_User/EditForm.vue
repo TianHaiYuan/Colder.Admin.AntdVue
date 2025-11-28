@@ -111,16 +111,28 @@ const init = async () => {
   }
 }
 
-const openForm = async (id) => {
-  await init()
+const openForm = async (id, isCopy = false) => {
+	await init()
 
-  if (id) {
-    const resJson = await proxy.$http.post('/Base_Manage/Base_User/GetTheData', { id })
-    Object.assign(entity, resJson.Data)
-    if (entity.Birthday) {
-      entity.Birthday = dayjs(entity.Birthday).format('YYYY-MM-DD')
-    }
-  }
+	if (id) {
+		const resJson = await proxy.$http.post('/Base_Manage/Base_User/GetTheData', { id })
+		Object.assign(entity, resJson.Data)
+		if (entity.Birthday) {
+			entity.Birthday = dayjs(entity.Birthday).format('YYYY-MM-DD')
+		}
+		if (isCopy) {
+			// 复制用户时清空主键和审计字段，让后端按新增处理并重置审计信息
+			entity.Id = null
+			delete entity.CreateTime
+			delete entity.CreatorId
+			delete entity.CreatorName
+			delete entity.ModifyTime
+			delete entity.ModifierId
+			delete entity.ModifierName
+			delete entity.Deleted
+			delete entity.TenantId
+		}
+	}
 }
 
 const handleSubmit = async () => {

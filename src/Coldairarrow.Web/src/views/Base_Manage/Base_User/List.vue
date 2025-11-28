@@ -54,6 +54,10 @@
             <a @click="handleEdit(record.Id)">编辑</a>
             <a-divider type="vertical" />
           </template>
+          <template v-if="hasPerm('Base_User.Add')">
+            <a @click="handleCopy(record.Id)">复制</a>
+            <a-divider type="vertical" />
+          </template>
           <a v-if="hasPerm('Base_User.Delete')" @click="handleDelete([record.Id])">删除</a>
         </template>
       </template>
@@ -86,7 +90,7 @@ const pagination = reactive({
 })
 
 const filters = ref({})
-const sorter = ref({ field: 'Id', order: 'asc' })
+const sorter = ref({})
 
 const columns = [
   { title: '用户名', dataIndex: 'UserName', width: '10%' },
@@ -94,9 +98,18 @@ const columns = [
   { title: '性别', dataIndex: 'SexText', width: '5%' },
   { title: '出生日期', dataIndex: 'BirthdayText', width: '10%' },
   { title: '所属部门', dataIndex: 'DepartmentName', width: '10%' },
-  { title: '所属角色', dataIndex: 'RoleNames', width: '30%' },
+  { title: '所属角色', dataIndex: 'RoleNames', width: '20%' },
+  { title: '创建时间', dataIndex: 'CreateTime', width: '12%', sorter: true },
   { title: '操作', dataIndex: 'action' }
 ]
+
+// 构建排序参数
+const buildSorts = (srt) => {
+  if (srt && srt.field) {
+    return [{ Field: srt.field, Type: srt.order === 'ascend' ? 'asc' : 'desc' }]
+  }
+  return null
+}
 
 const hasSelected = computed(() => selectedRowKeys.value.length > 0)
 
@@ -120,8 +133,7 @@ const getDataList = async () => {
     const resJson = await proxy.$http.post('/Base_Manage/Base_User/GetDataList', {
       PageIndex: pagination.current,
       PageRows: pagination.pageSize,
-      SortField: sorter.value.field || 'Id',
-      SortType: sorter.value.order,
+      Sorts: buildSorts(sorter.value),
       Search: queryParam,
       ...filters.value
     })
@@ -144,6 +156,10 @@ const hanldleAdd = () => {
 const handleEdit = (id) => {
   editFormRef.value?.openForm(id)
 }
+
+  const handleCopy = (id) => {
+    editFormRef.value?.openForm(id, true)
+  }
 
 const handleSearch = () => {
   pagination.current = 1

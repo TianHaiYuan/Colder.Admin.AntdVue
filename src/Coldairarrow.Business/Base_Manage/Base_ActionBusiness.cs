@@ -1,8 +1,8 @@
-﻿using AutoMapper;
-using Coldairarrow.Entity.Base_Manage;
+﻿using Coldairarrow.Entity.Base_Manage;
 using Coldairarrow.IBusiness;
 using Coldairarrow.Util;
 using EFCore.Sharding;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -13,11 +13,9 @@ namespace Coldairarrow.Business.Base_Manage
 {
     public class Base_ActionBusiness : BaseBusiness<Base_Action>, IBase_ActionBusiness, ITransientDependency
     {
-        readonly IMapper _mapper;
-        public Base_ActionBusiness(IDbAccessor db, IMapper mapper, IOperator @operator = null)
+        public Base_ActionBusiness(IDbAccessor db, IOperator @operator = null)
             : base(db, @operator)
         {
-            _mapper = mapper;
         }
 
         #region 外部接口
@@ -87,14 +85,14 @@ namespace Coldairarrow.Business.Base_Manage
         [Transactional]
         public async Task AddDataAsync(ActionEditInputDTO input)
         {
-            await InsertAsync(_mapper.Map<Base_Action>(input));
+            await InsertAsync(input.Adapt<Base_Action>());
             await SavePermissionAsync(input.Id, input.permissionList);
         }
 
         [Transactional]
         public async Task UpdateDataAsync(ActionEditInputDTO input)
         {
-            await UpdateAsync(_mapper.Map<Base_Action>(input));
+            await UpdateAsync(input.Adapt<Base_Action>());
             await SavePermissionAsync(input.Id, input.permissionList);
         }
 

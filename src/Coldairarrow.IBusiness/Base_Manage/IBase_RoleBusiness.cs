@@ -21,7 +21,6 @@ namespace Coldairarrow.Business.Base_Manage
         public string roleName { get; set; }
     }
 
-    [Map(typeof(Base_Role))]
     public class Base_RoleInfoDTO : Base_Role
     {
         public RoleTypes? RoleType { get => RoleName?.ToEnum<RoleTypes>(); }

@@ -87,14 +87,22 @@ const pagination = reactive({
 })
 
 const filters = ref({})
-const sorter = ref({ field: 'Id', order: 'asc' })
+const sorter = ref({})
 
 const columns = [
-  { title: '内容', dataIndex: 'LogContent', width: '50%' },
-  { title: '类别', dataIndex: 'LogType', width: '10%' },
-  { title: '操作人', dataIndex: 'CreatorRealName', width: '5%' },
-  { title: '时间', dataIndex: 'CreateTime', width: '10%' }
+	{ title: '内容', dataIndex: 'LogContent', width: '50%' },
+	{ title: '类别', dataIndex: 'LogType', width: '10%' },
+	{ title: '操作人', dataIndex: 'CreatorName', width: '10%' },
+	{ title: '时间', dataIndex: 'CreateTime', width: '15%', sorter: true }
 ]
+
+// 构建排序参数
+const buildSorts = (srt) => {
+  if (srt && srt.field) {
+    return [{ Field: srt.field, Type: srt.order === 'ascend' ? 'asc' : 'desc' }]
+  }
+  return null
+}
 
 const handleTableChange = (pag, flt, srt) => {
   pagination.current = pag.current
@@ -116,8 +124,7 @@ const getDataList = async () => {
     const resJson = await proxy.$http.post('/Base_Manage/Base_UserLog/GetLogList', {
       PageIndex: pagination.current,
       PageRows: pagination.pageSize,
-      SortField: 'CreateTime',
-      SortType: 'desc',
+      Sorts: buildSorts(sorter.value),
       ...filters.value,
       Search: queryParam
     })

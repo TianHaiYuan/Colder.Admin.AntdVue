@@ -18,7 +18,7 @@ namespace Coldairarrow.Api
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddFxServices();
-                    services.AddAutoMapper();
+                    services.AddMapster();
                     services.AddEFCoreSharding(config =>
                     {
                         config.SetEntityAssemblies(GlobalAssemblies.AllAssemblies);
@@ -28,6 +28,7 @@ namespace Coldairarrow.Api
 
                         //var orderDbOptions = hostContext.Configuration.GetSection("Database:OrderDb").Get<DatabaseOptions>();
                         //config.UseDatabase(orderDbOptions.ConnectionString, baseDbOptions.DatabaseType);
+                        config.UseLogicDelete();
                     });
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
