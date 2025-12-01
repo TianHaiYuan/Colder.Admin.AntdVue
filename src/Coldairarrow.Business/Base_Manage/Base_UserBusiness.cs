@@ -151,9 +151,8 @@ namespace Coldairarrow.Business.Base_Manage
                 UserId = userId,
                 RoleId = x
             }).ToList();
-            userRoleList.ForEach(InitCreateAudit);
             await Db.DeleteAsync<Base_UserRole>(x => x.UserId == userId);
-            await Db.InsertAsync(userRoleList);
+			await InsertEntityAsync(userRoleList);
         }
 
         #endregion

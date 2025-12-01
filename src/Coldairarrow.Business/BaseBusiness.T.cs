@@ -83,6 +83,82 @@ namespace Coldairarrow.Business
 
         #endregion
 
+		#region 通用审计封装
+
+		/// <summary>
+		/// 为任意 <see cref="BaseEntity"/> 派生实体初始化创建审计并插入
+		/// </summary>
+		protected int InsertEntity<TEntity>(TEntity entity) where TEntity : BaseEntity
+		{
+			InitCreateAudit(entity);
+			return Db.Insert(entity);
+		}
+
+		/// <summary>
+		/// 为任意 <see cref="BaseEntity"/> 派生实体初始化创建审计并插入
+		/// </summary>
+		protected async Task<int> InsertEntityAsync<TEntity>(TEntity entity) where TEntity : BaseEntity
+		{
+			InitCreateAudit(entity);
+			return await Db.InsertAsync(entity);
+		}
+
+		/// <summary>
+		/// 为任意 <see cref="BaseEntity"/> 派生实体集合初始化创建审计并插入
+		/// </summary>
+		protected int InsertEntity<TEntity>(List<TEntity> entities) where TEntity : BaseEntity
+		{
+			entities?.ForEach(InitCreateAudit);
+			return Db.Insert(entities);
+		}
+
+		/// <summary>
+		/// 为任意 <see cref="BaseEntity"/> 派生实体集合初始化创建审计并插入
+		/// </summary>
+		protected async Task<int> InsertEntityAsync<TEntity>(List<TEntity> entities) where TEntity : BaseEntity
+		{
+			entities?.ForEach(InitCreateAudit);
+			return await Db.InsertAsync(entities);
+		}
+
+		/// <summary>
+		/// 为任意 <see cref="BaseEntity"/> 派生实体初始化修改审计并更新
+		/// </summary>
+		protected int UpdateEntity<TEntity>(TEntity entity) where TEntity : BaseEntity
+		{
+			InitUpdateAudit(entity);
+			return Db.Update(entity);
+		}
+
+		/// <summary>
+		/// 为任意 <see cref="BaseEntity"/> 派生实体初始化修改审计并更新
+		/// </summary>
+		protected async Task<int> UpdateEntityAsync<TEntity>(TEntity entity) where TEntity : BaseEntity
+		{
+			InitUpdateAudit(entity);
+			return await Db.UpdateAsync(entity);
+		}
+
+		/// <summary>
+		/// 为任意 <see cref="BaseEntity"/> 派生实体集合初始化修改审计并更新
+		/// </summary>
+		protected int UpdateEntity<TEntity>(List<TEntity> entities) where TEntity : BaseEntity
+		{
+			entities?.ForEach(InitUpdateAudit);
+			return Db.Update(entities);
+		}
+
+		/// <summary>
+		/// 为任意 <see cref="BaseEntity"/> 派生实体集合初始化修改审计并更新
+		/// </summary>
+		protected async Task<int> UpdateEntityAsync<TEntity>(List<TEntity> entities) where TEntity : BaseEntity
+		{
+			entities?.ForEach(InitUpdateAudit);
+			return await Db.UpdateAsync(entities);
+		}
+
+		#endregion
+
         #region 外部属性
 
         /// <summary>
