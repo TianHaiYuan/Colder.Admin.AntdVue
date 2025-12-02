@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
@@ -7,16 +6,13 @@ using System.Reflection;
 namespace Coldairarrow.Migrations
 {
     /// <summary>
-    /// 应用程序数据库上下文 - 用于 EF Core 迁移
+    /// 产品库 DbContext（用于 EF Core 迁移）
     /// </summary>
-    public class AppDbContext : DbContext
+    public class ProductDbContext : DbContext
     {
-        /// <summary>
-        /// 实体程序集（Coldairarrow.Entity）
-        /// </summary>
         private static readonly Assembly EntityAssembly = Assembly.Load("Coldairarrow.Entity");
 
-        public AppDbContext(DbContextOptions<AppDbContext> options)
+        public ProductDbContext(DbContextOptions<ProductDbContext> options)
             : base(options)
         {
         }
@@ -25,27 +21,19 @@ namespace Coldairarrow.Migrations
         {
             base.OnModelCreating(modelBuilder);
 
-            // BaseDb(AppDbContext) 只负责基础管理库(Base_Manage)的迁移
+            // 只注册 Product_Manage 命名空间下的实体
             var entityTypes = EntityAssembly.GetTypes()
                 .Where(t => t.IsClass
                     && !t.IsAbstract
                     && t.GetCustomAttribute<TableAttribute>(inherit: false) != null
                     && !t.Name.EndsWith("DTO")
-                    && t.Namespace != null
-                    && t.Namespace.StartsWith("Coldairarrow.Entity.Base_Manage"));
+                    && t.Namespace == "Coldairarrow.Entity.Product_Manage");
 
             foreach (var entityType in entityTypes)
             {
-                // 如果实体尚未注册，则注册它
                 if (modelBuilder.Model.FindEntityType(entityType) == null)
-                {
                     modelBuilder.Entity(entityType);
-                }
             }
-
-            // 可以在此处添加额外的 Fluent API 配置
-            // 例如: modelBuilder.Entity<Base_User>().HasIndex(x => x.UserName).IsUnique();
         }
     }
 }
-

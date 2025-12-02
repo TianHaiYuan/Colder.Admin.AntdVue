@@ -37,5 +37,10 @@ export default {
   apiTimeout: parseInt(process.env.VUE_APP_ApiTimeout),//接口超时时间ms
   devPort: parseInt(process.env.VUE_APP_DevPort), //本地开发启动端口
   appId: process.env.VUE_APP_AppId,
-  appSecret: process.env.VUE_APP_AppSecret
+	appSecret: process.env.VUE_APP_AppSecret,
+  
+	// 蜂蜜图床配置
+	beeImgUploadUrl: process.env.VUE_APP_BeeImgUploadUrl,
+	beeImgToken: process.env.VUE_APP_BeeImgToken,
+	beeImgStorageId: process.env.VUE_APP_BeeImgStorageId
 }

@@ -20,7 +20,11 @@ export default defineConfig(({ mode }) => {
     VUE_APP_ApiTimeout: env.VUE_APP_ApiTimeout || '10000',
     VUE_APP_DevPort: env.VUE_APP_DevPort || '5001',
     VUE_APP_AppId: env.VUE_APP_AppId || 'PcAdmin',
-    VUE_APP_AppSecret: env.VUE_APP_AppSecret || 'wtMaiTRPTT3hrf5e',
+	    VUE_APP_AppSecret: env.VUE_APP_AppSecret || 'wtMaiTRPTT3hrf5e',
+	    // 蜂蜜图床相关配置
+	    VUE_APP_BeeImgUploadUrl: env.VUE_APP_BeeImgUploadUrl || 'https://www.beeimg.cn/api/v2/upload',
+	    VUE_APP_BeeImgToken: env.VUE_APP_BeeImgToken || '',
+	    VUE_APP_BeeImgStorageId: env.VUE_APP_BeeImgStorageId || ''
   }
 
   return {

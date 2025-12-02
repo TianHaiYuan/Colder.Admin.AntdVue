@@ -1,4 +1,6 @@
-﻿using Coldairarrow.Util;
+﻿using Coldairarrow.IBusiness.Order_Manage;
+using Coldairarrow.IBusiness.Product_Manage;
+using Coldairarrow.Util;
 using Colder.Logging.Serilog;
 using EFCore.Sharding;
 using Microsoft.AspNetCore.Hosting;
@@ -26,8 +28,11 @@ namespace Coldairarrow.Api
                         var baseDbOptions = hostContext.Configuration.GetSection("Database:BaseDb").Get<DatabaseOptions>();
                         config.UseDatabase(baseDbOptions.ConnectionString, baseDbOptions.DatabaseType);
 
-                        //var orderDbOptions = hostContext.Configuration.GetSection("Database:OrderDb").Get<DatabaseOptions>();
-                        //config.UseDatabase(orderDbOptions.ConnectionString, baseDbOptions.DatabaseType);
+                        var orderDbOptions = hostContext.Configuration.GetSection("Database:OrderDb").Get<DatabaseOptions>();
+                        config.UseDatabase<IOrderDbAccessor>(orderDbOptions.ConnectionString, orderDbOptions.DatabaseType);
+                        var productDbOptions = hostContext.Configuration.GetSection("Database:ProductDb").Get<DatabaseOptions>();
+                        config.UseDatabase<IProductDbAccessor>(productDbOptions.ConnectionString, productDbOptions.DatabaseType);
+
                         config.UseLogicDelete();
                     });
                 })
