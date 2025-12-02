@@ -95,9 +95,6 @@
 </template>
 
 <script>
-import axios from 'axios'
-import defaultSettings from '@/config/defaultSettings.js'
-
 export default {
   props: {
     afterSubmit: { type: Function, default: null },
@@ -133,31 +130,28 @@ export default {
         })
       }
 	    },
-	    async handleImageUpload({ file, onSuccess, onError }) {
-	      const formData = new FormData()
-	      formData.append('file', file)
-	      formData.append('storage_id', defaultSettings.beeImgStorageId)
-	      try {
-	        const res = await axios.post(defaultSettings.beeImgUploadUrl, formData, {
-	          headers: {
-	            Authorization: `Bearer ${defaultSettings.beeImgToken}`,
-	            Accept: 'application/json'
-	          }
-	        })
-	        if (res.data && res.data.status === 'success' && res.data.data && res.data.data.public_url) {
-	          this.entity.ImageUrl = res.data.data.public_url
-	          this.$message.success('图片上传成功')
-	          onSuccess && onSuccess(res.data)
-	        } else {
-	          const msg = (res.data && res.data.message) || '图片上传失败'
-	          this.$message.error(msg)
-	          onError && onError(new Error(msg))
-	        }
-	      } catch (e) {
-	        this.$message.error('图片上传失败')
-	        onError && onError(e)
-	      }
-	    },
+		    async handleImageUpload({ file, onSuccess, onError }) {
+		      const formData = new FormData()
+		      formData.append('file', file)
+		      try {
+		        const resJson = await this.$http.post('/Base_Manage/Upload/UploadToBeeImg', formData, {
+		          headers: { 'Content-Type': 'multipart/form-data' }
+		        })
+		        if (resJson.Success && resJson.Data && resJson.Data.url) {
+		          this.entity.ImageUrl = resJson.Data.url
+		          this.$message.success('图片上传成功')
+		          onSuccess && onSuccess(resJson.Data)
+		        } else {
+		          const msg = resJson.Msg || '图片上传失败'
+		          this.$message.error(msg)
+		          onError && onError(new Error(msg))
+		        }
+		      } catch (e) {
+		        const msg = (e && e.message) || '图片上传失败'
+		        this.$message.error(msg)
+		        onError && onError(e)
+		      }
+		    },
 		    async handleSubmit() {
 		      try {
 		        await this.$refs['form'].validate()
