@@ -68,6 +68,8 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+import { notification } from 'ant-design-vue'
 import { triggerWindowResizeEvent } from '@/utils/util.js'
 import { useAppSettings, useDevice } from '@/utils/mixin.js'
 import config from '@/config/defaultSettings.js'
@@ -79,8 +81,10 @@ import GlobalHeader from '@/components/GlobalHeader/index.js'
 import GlobalFooter from '@/components/GlobalFooter/index.js'
 import { getAddRouterRef } from '@/utils/routerUtil.js'
 import { useAppStore } from '@/store/index.js'
+import { setupApprovalNotification } from '@/utils/signalrClient.js'
 
 const appStore = useAppStore()
+const router = useRouter()
 const { layoutMode, navTheme, fixedHeader, fixSiderbar, contentWidth, sidebarOpened, multiTab, isTopMenu, isSideMenu } = useAppSettings()
 const { device, isMobile, isDesktop } = useDevice()
 
@@ -123,6 +127,69 @@ onMounted(() => {
       }, 16)
     })
   }
+})
+
+	// 启动审批消息的 SignalR 实时通知
+	const handleApprovalEvent = (event) => {
+	  if (!event) return
+	  const eventType = event.EventType || event.eventType
+	  const title = event.Title || ''
+	  const stepName = event.StepName || ''
+	  const businessType = event.BusinessType || event.businessType || ''
+	  const businessId = event.BusinessId || event.businessId || ''
+	  const status = event.Status || event.status || ''
+
+	  let message = '审批消息'
+	  let description = ''
+	  const statusTextMap = {
+	    Pending: '进行中',
+	    Approved: '已通过',
+	    Rejected: '已驳回',
+	    Cancelled: '已取消',
+	    Waiting: '未开始'
+	  }
+		  const businessDisplay = businessType === 'Product'
+		    ? '产品审批'
+		    : (businessType || '单据')
+
+	  if (eventType === 'approval.step.pending') {
+	    message = '您有新的审批待处理'
+		    description = `${title || businessDisplay}${stepName ? ' - ' + stepName : ''}`
+	  } else if (eventType === 'approval.completed') {
+	    message = '审批结果通知'
+	    const statusText = statusTextMap[status] || status || '已结束'
+		    description = `${title || businessDisplay} 已完成，状态：${statusText}`
+	  } else if (eventType === 'approval.step.approved') {
+	    message = '审批步骤已通过'
+		    description = `${title || businessDisplay}${stepName ? ' - ' + stepName : ''}`
+	  } else if (eventType === 'approval.step.rejected') {
+	    message = '审批步骤已被驳回'
+		    description = `${title || businessDisplay}${stepName ? ' - ' + stepName : ''}`
+	  } else {
+		    description = `${eventType || ''} - ${title || businessDisplay || ''}`
+	  }
+
+	  const onClick = () => {
+	    // 目前只对产品审批做深度跳转，后续可按业务类型扩展
+	    if (!businessType || !businessId) return
+	    if (businessType === 'Product') {
+	      router.push({
+	        path: '/Product_Manage/Product/List',
+	        query: { id: businessId, fromNotice: '1' }
+	      })
+	    }
+	  }
+
+	  notification.info({
+	    message,
+	    description,
+	    duration: 5,
+	    onClick
+	  })
+	}
+
+onMounted(() => {
+  setupApprovalNotification(handleApprovalEvent)
 })
 
 const toggle = () => {

@@ -73,6 +73,10 @@ const remove = (targetKey) => {
   fullPathList.value = fullPathList.value.filter(path => path !== targetKey)
   if (!fullPathList.value.includes(activeKey.value)) {
     selectedLastPath()
+    // 当前激活的标签被关闭后，主动跳转到新的激活标签对应的路由
+    if (activeKey.value) {
+      router.push({ path: activeKey.value })
+    }
   }
 }
 

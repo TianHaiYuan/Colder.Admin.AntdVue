@@ -117,6 +117,13 @@ export const asyncRouterMap = [
             meta: { title: '代码生成', keepAlive: true }
           }
         ]
+      },
+      // 消息中心
+      {
+        path: '/MessageCenter',
+        name: 'MessageCenter',
+        component: () => import('@/views/MessageCenter/Index.vue'),
+        meta: { title: '消息中心', icon: 'bell', keepAlive: true }
       }
     ]
   }

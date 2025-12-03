@@ -25,6 +25,10 @@ export default defineConfig(({ mode }) => {
 	    VUE_APP_BeeImgUploadUrl: env.VUE_APP_BeeImgUploadUrl || 'https://www.beeimg.cn/api/v2/upload',
 	    VUE_APP_BeeImgToken: env.VUE_APP_BeeImgToken || '',
 	    VUE_APP_BeeImgStorageId: env.VUE_APP_BeeImgStorageId || ''
+    ,
+	    // 审批中心 & 消息通知中心配置
+	    VUE_APP_ApprovalApiRootUrl: env.VUE_APP_ApprovalApiRootUrl || '',
+	    VUE_APP_NotificationHubUrl: env.VUE_APP_NotificationHubUrl || ''
   }
 
   return {

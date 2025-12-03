@@ -10,7 +10,10 @@
           <MenuUnfoldOutlined v-else-if="device==='mobile'" class="trigger" @click="toggle"/>
           <MenuUnfoldOutlined v-else-if="collapsed" class="trigger" @click="toggle"/>
           <MenuFoldOutlined v-else class="trigger" @click="toggle"/>
-          <UserMenu />
+          <div class="header-right">
+            <NoticeIcon class="header-notice-entry" />
+            <UserMenu />
+          </div>
         </div>
         <div v-else :class="['top-nav-header-index', theme]">
           <div class="header-index-wide">
@@ -20,7 +23,10 @@
               <MenuFoldOutlined v-else-if="collapsed" class="trigger" @click="toggle"/>
               <MenuUnfoldOutlined v-else class="trigger" @click="toggle"/>
             </div>
-            <UserMenu class="header-index-right" />
+            <div class="header-index-right">
+              <NoticeIcon class="header-notice-entry" />
+              <UserMenu />
+            </div>
           </div>
         </div>
       </a-layout-header>
@@ -32,6 +38,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons-vue'
 import UserMenu from '../tools/UserMenu.vue'
+import NoticeIcon from '../NoticeIcon/NoticeIcon.vue'
 import SMenu from '../Menu/index.js'
 import Logo from '../tools/Logo.vue'
 import { useAppSettings } from '@/utils/mixin.js'

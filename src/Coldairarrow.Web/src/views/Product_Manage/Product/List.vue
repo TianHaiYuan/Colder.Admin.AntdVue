@@ -66,6 +66,8 @@
           </a-tag>
         </template>
         <template v-else-if="column.dataIndex === 'action'">
+          <a @click="handleDetail(record.Id)">查看详情</a>
+          <a-divider type="vertical" />
           <a @click="handleEdit(record.Id)">编辑</a>
           <a-divider type="vertical" />
           <a @click="handleDelete([record.Id])">删除</a>
@@ -74,19 +76,24 @@
     </a-table>
 
     <EditForm ref="editFormRef" :afterSubmit="getDataList" :categoryList="categoryList" />
+    <DetailModal ref="detailModalRef" />
   </a-card>
 </template>
 
-<script setup>
-import { ref, reactive, computed, onMounted, getCurrentInstance } from 'vue'
+	<script setup>
+	import { ref, reactive, computed, onMounted, getCurrentInstance, watch } from 'vue'
+	import { useRoute } from 'vue-router'
 import { Modal, message } from 'ant-design-vue'
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons-vue'
 import EditForm from './EditForm.vue'
+import DetailModal from './DetailModal.vue'
 
-const { proxy } = getCurrentInstance()
+	const { proxy } = getCurrentInstance()
+	const route = useRoute()
 
 const tableRef = ref(null)
 const editFormRef = ref(null)
+const detailModalRef = ref(null)
 const data = ref([])
 const categoryList = ref([])
 const loading = ref(false)
@@ -161,6 +168,7 @@ const handleTableChange = (pag, flt, srt) => {
 const onSelectChange = (keys) => { selectedRowKeys.value = keys }
 const hanldleAdd = () => { editFormRef.value?.openForm() }
 const handleEdit = (id) => { editFormRef.value?.openForm(id) }
+const handleDetail = (id) => { detailModalRef.value?.openModal(id) }
 const handleSearch = () => { pagination.current = 1; getDataList() }
 const handleReset = () => { Object.assign(queryParam, { Keyword: '', CategoryId: undefined, Status: undefined }); getDataList() }
 
@@ -173,7 +181,23 @@ const handleDelete = (ids) => {
   if (resJson.Success) { message.success('操作成功!'); getDataList() } else { message.error(resJson.Msg) }
 }
 
-onMounted(() => { getCategoryList(); getDataList() })
+	onMounted(async () => {
+	  await Promise.all([getCategoryList(), getDataList()])
+	  const id = route.query.id
+	  const fromNotice = route.query.fromNotice
+	  if (id && fromNotice === '1') {
+	    handleDetail(id)
+	  }
+	})
+
+	watch(
+	  () => ({ id: route.query.id, fromNotice: route.query.fromNotice }),
+	  ({ id, fromNotice }) => {
+	    if (id && fromNotice === '1') {
+	      handleDetail(id)
+	    }
+	  }
+	)
 </script>
 
 <script>

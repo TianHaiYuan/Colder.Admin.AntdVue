@@ -36,11 +36,17 @@ export default {
   localRootUrl: process.env.VUE_APP_LocalRootUrl,//本地调试接口根地址
   apiTimeout: parseInt(process.env.VUE_APP_ApiTimeout),//接口超时时间ms
   devPort: parseInt(process.env.VUE_APP_DevPort), //本地开发启动端口
-  appId: process.env.VUE_APP_AppId,
-	appSecret: process.env.VUE_APP_AppSecret,
-  
-	// 蜂蜜图床配置
-	beeImgUploadUrl: process.env.VUE_APP_BeeImgUploadUrl,
-	beeImgToken: process.env.VUE_APP_BeeImgToken,
-	beeImgStorageId: process.env.VUE_APP_BeeImgStorageId
+	  appId: process.env.VUE_APP_AppId,
+		appSecret: process.env.VUE_APP_AppSecret,
+	  
+			// 蜂蜜图床配置
+			beeImgUploadUrl: process.env.VUE_APP_BeeImgUploadUrl,
+			beeImgToken: process.env.VUE_APP_BeeImgToken,
+			beeImgStorageId: process.env.VUE_APP_BeeImgStorageId,
+
+			// 审批中心接口根地址（独立服务）
+			approvalApiRootUrl: process.env.VUE_APP_ApprovalApiRootUrl,
+
+			// 消息通知中心 SignalR Hub 地址（例如 http://localhost:5200/hubs/notification）
+			notificationHubUrl: process.env.VUE_APP_NotificationHubUrl
 }

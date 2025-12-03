@@ -332,10 +332,16 @@ body.userLayout {
 .table-alert {
   margin-bottom: 16px;
 }
+.table-page-search-wrapper {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 4px;
+}
 .table-page-search-wrapper .ant-form-inline .ant-form-item {
   display: flex;
-  margin-bottom: 24px;
-  margin-right: 0;
+  margin-bottom: 0;
+  margin-right: 16px;
 }
 .table-page-search-wrapper .ant-form-inline .ant-form-item .ant-form-item-control-wrapper {
   flex: 1 1;
@@ -351,10 +357,20 @@ body.userLayout {
   height: 32px;
   line-height: 32px;
 }
+.table-page-search-wrapper .ant-row {
+  display: flex;
+  align-items: center;
+}
 .table-page-search-wrapper .table-page-search-submitButtons {
   display: block;
   margin-bottom: 24px;
   white-space: nowrap;
+}
+.table-operator {
+  margin-bottom: 18px;
+}
+.table-operator button {
+  margin-right: 8px;
 }
 .content .table-operator {
   margin-bottom: 18px;

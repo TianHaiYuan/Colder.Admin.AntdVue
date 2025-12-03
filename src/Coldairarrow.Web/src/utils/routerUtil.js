@@ -94,6 +94,14 @@ const generatorDynamicRouter = async () => {
   }
 
   rootRouter.children = generator(res)
+
+  // 固定追加“消息中心”路由，保证头像左侧消息入口可以正常跳转
+  rootRouter.children.push({
+    path: '/MessageCenter',
+    name: uuidv4(),
+    component: () => import('@/views/MessageCenter/Index.vue'),
+    meta: { title: '消息中心', icon: 'bell' }
+  })
   allRouters.push(notFoundRouter)
 
   return allRouters

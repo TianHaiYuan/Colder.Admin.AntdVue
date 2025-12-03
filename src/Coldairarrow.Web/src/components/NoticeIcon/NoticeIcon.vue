@@ -1,78 +1,58 @@
 <template>
-  <a-popover
-    v-model:open="visible"
-    trigger="click"
-    placement="bottomRight"
-    overlay-class-name="header-notice-wrapper"
-    :get-popup-container="() => noticeRef?.parentElement"
-    :auto-adjust-overflow="true"
-    :arrow-point-at-center="true"
-    :overlay-style="{ width: '300px', top: '50px' }"
-  >
-    <template #content>
-      <a-spin :spinning="loading">
-        <a-tabs>
-          <a-tab-pane tab="通知" key="1">
-            <a-list>
-              <a-list-item>
-                <a-list-item-meta title="你收到了 14 份新周报" description="一年前">
-                  <template #avatar>
-                    <a-avatar style="background-color: white" src="https://gw.alipayobjects.com/zos/rmsportal/ThXAXghbEsBCCSDihZxY.png"/>
-                  </template>
-                </a-list-item-meta>
-              </a-list-item>
-              <a-list-item>
-                <a-list-item-meta title="你推荐的 曲妮妮 已通过第三轮面试" description="一年前">
-                  <template #avatar>
-                    <a-avatar style="background-color: white" src="https://gw.alipayobjects.com/zos/rmsportal/OKJXDXrmkNshAMvwtvhu.png"/>
-                  </template>
-                </a-list-item-meta>
-              </a-list-item>
-              <a-list-item>
-                <a-list-item-meta title="这种模板可以区分多种通知类型" description="一年前">
-                  <template #avatar>
-                    <a-avatar style="background-color: white" src="https://gw.alipayobjects.com/zos/rmsportal/kISTdvpyTAhtGxpovNWd.png"/>
-                  </template>
-                </a-list-item-meta>
-              </a-list-item>
-            </a-list>
-          </a-tab-pane>
-          <a-tab-pane tab="消息" key="2">
-            123
-          </a-tab-pane>
-          <a-tab-pane tab="待办" key="3">
-            123
-          </a-tab-pane>
-        </a-tabs>
-      </a-spin>
-    </template>
-    <span @click="fetchNotice" class="header-notice" ref="noticeRef">
-      <a-badge count="12">
-        <BellOutlined style="font-size: 16px; padding: 4px" />
-      </a-badge>
-    </span>
-  </a-popover>
+	<span class="header-notice" @click="goMessageCenter" ref="noticeRef">
+	  <a-badge :count="unreadCount" :overflow-count="99">
+	    <BellOutlined style="font-size: 16px; padding: 4px" />
+	  </a-badge>
+	</span>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { BellOutlined } from '@ant-design/icons-vue'
+import { Axios } from '@/utils/plugin/axios-plugin.js'
+import OperatorCache from '@/utils/cache/OperatorCache.js'
+import config from '@/config/defaultSettings.js'
 
 const noticeRef = ref(null)
-const loading = ref(false)
-const visible = ref(false)
+const unreadCount = ref(0)
+const router = useRouter()
 
-const fetchNotice = () => {
-  if (!visible.value) {
-    loading.value = true
-    setTimeout(() => {
-      loading.value = false
-    }, 2000)
-  } else {
-    loading.value = false
+// 从 SignalR Hub 地址推导出 NotificationCenter.Api 的 HTTP 根地址
+const notificationApiRoot = (() => {
+  const hubUrl = config.notificationHubUrl
+  if (!hubUrl) return ''
+  try {
+    const url = new URL(hubUrl)
+    return url.origin
+  } catch {
+    return hubUrl.replace('/hubs/notification', '')
   }
-  visible.value = !visible.value
+})()
+
+const refreshUnread = async () => {
+  try {
+    await OperatorCache.init().catch(() => {})
+    const userId = OperatorCache.info.Id
+    if (!userId) return
+    const res = await Axios.get(`${notificationApiRoot}/api/notifications/unread-count`, {
+      params: { userId }
+    })
+    if (res && typeof res.count === 'number') {
+      unreadCount.value = res.count
+    }
+  } catch (e) {
+    console.error(e)
+  }
 }
+
+const goMessageCenter = () => {
+  router.push('/MessageCenter')
+}
+
+onMounted(() => {
+  refreshUnread()
+})
 </script>
 
 <script>
