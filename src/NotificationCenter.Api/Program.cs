@@ -28,14 +28,14 @@ builder.Services.AddSingleton<NotificationStore>();
 builder.Services.AddHostedService<RabbitMqListener>();
 builder.Services.AddCors(options =>
 {
-	options.AddDefaultPolicy(policy =>
-	{
-		policy
-			.AllowAnyHeader()
-			.AllowAnyMethod()
-			.AllowCredentials()
-			.SetIsOriginAllowed(_ => true);
-	});
+    options.AddDefaultPolicy(policy =>
+    {
+        policy
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials()
+            .SetIsOriginAllowed(_ => true);
+    });
 });
 
 var app = builder.Build();
@@ -51,32 +51,32 @@ app.MapHub<NotificationHub>("/hubs/notification");
 // POST /api/notifications/{id}/read?userId=xxx
 app.MapGet("/api/notifications", async (string userId, string? box, int page, int pageSize, NotificationStore store) =>
 {
-	if (string.IsNullOrWhiteSpace(userId))
-		return Results.BadRequest(new { message = "userId 不能为空" });
+    if (string.IsNullOrWhiteSpace(userId))
+        return Results.BadRequest(new { message = "userId 不能为空" });
 
-	var normalizedBox = string.Equals(box, "sent", StringComparison.OrdinalIgnoreCase)
-		? "sent"
-		: "received";
-	var (items, total) = await store.GetListAsync(userId, normalizedBox, page, pageSize);
-	return Results.Ok(new { items, total });
+    var normalizedBox = string.Equals(box, "sent", StringComparison.OrdinalIgnoreCase)
+        ? "sent"
+        : "received";
+    var (items, total) = await store.GetListAsync(userId, normalizedBox, page, pageSize);
+    return Results.Ok(new { items, total });
 });
 
 app.MapGet("/api/notifications/unread-count", async (string userId, NotificationStore store) =>
 {
-	if (string.IsNullOrWhiteSpace(userId))
-		return Results.BadRequest(new { message = "userId 不能为空" });
+    if (string.IsNullOrWhiteSpace(userId))
+        return Results.BadRequest(new { message = "userId 不能为空" });
 
-	var count = await store.GetUnreadCountAsync(userId);
-	return Results.Ok(new { count });
+    var count = await store.GetUnreadCountAsync(userId);
+    return Results.Ok(new { count });
 });
 
 app.MapPost("/api/notifications/{id:long}/read", async (long id, string userId, NotificationStore store) =>
 {
-	if (id <= 0 || string.IsNullOrWhiteSpace(userId))
-		return Results.BadRequest(new { message = "参数不合法" });
+    if (id <= 0 || string.IsNullOrWhiteSpace(userId))
+        return Results.BadRequest(new { message = "参数不合法" });
 
-	await store.MarkAsReadAsync(id, userId);
-	return Results.Ok();
+    await store.MarkAsReadAsync(id, userId);
+    return Results.Ok();
 });
 
 app.Run();
